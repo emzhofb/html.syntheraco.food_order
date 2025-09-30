@@ -1,0 +1,1903 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Food App – Single File Demo</title>
+    <style>
+      /* CSS Reset */
+      * {
+        box-sizing: border-box;
+      }
+      :root {
+        --primary: #4db6ac;
+        --primary-dark: #319b91;
+        --bg: #f6f9f9;
+        --card: #ffffff;
+        --text: #1d2b2a;
+        --muted: #6b7c7b;
+        --border: #e7efee;
+        --success: #35b476;
+        --warning: #ffb74d;
+        --shadow: 0 10px 20px rgba(0, 0, 0, 0.06), 0 2px 6px rgba(0, 0, 0, 0.04);
+      }
+      html, body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto,
+          "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+        color: var(--text);
+      }
+
+      /* Phone frame */
+      .stage {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+      .phone {
+        width: 100%;
+        max-width: 390px;
+        min-height: 100vh;
+        background: #ffffff;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 0 18px rgba(0, 0, 0, 0.15);
+      }
+
+      .phone-inner {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
+
+      /* App header */
+      .topbar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 14px 16px;
+        background: #e2f2f0;
+        border-bottom: 1px solid var(--border);
+      }
+      .topbar .title {
+        flex: 1;
+        text-align: center;
+        font-weight: 700;
+      }
+      .icon {
+        width: 22px;
+        height: 22px;
+        border-radius: 6px;
+        background: #d8e9e7;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        color: #3b5755;
+      }
+      .ghost {
+        opacity: 0.35;
+      }
+      #backBtn.icon {
+        background: transparent;
+        border-radius: 0;
+        width: auto;
+        height: auto;
+        font-size: 20px;
+        padding: 0;
+      }
+      #backBtn {
+        background: none;
+        border: none;
+        box-shadow: none;
+        width: auto;
+        height: auto;
+        font-size: 20px;
+        padding: 0;
+        color: #3b5755;
+      }
+
+
+      /* Pages */
+      .page {
+        display: none;
+        flex: 1;
+        overflow: auto;
+      }
+      .page.active {
+        display: block;
+      }
+
+      /* Common */
+      .section {
+        padding: 14px 16px;
+      }
+      .search {
+        display: flex;
+        align-items: center;
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 10px 12px;
+        gap: 8px;
+      }
+      .search input {
+        border: 0;
+        outline: 0;
+        flex: 1;
+        background: transparent;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 12px;
+        box-shadow: var(--shadow);
+        position: relative;
+        cursor: pointer;
+        transition: transform 0.15s;
+      }
+      .card:hover {
+        transform: translateY(-1px);
+      }
+      .card.selected::after {
+        content: "";
+        position: absolute;
+        inset: -6px;
+        border-radius: 20px;
+        border: 2px solid var(--primary-dark);
+        pointer-events: none;
+      }
+      .thumb {
+        height: 56px;
+        border-radius: 12px;
+        background: #dfecea;
+        margin-bottom: 8px;
+      }
+      .label {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .name {
+        font-weight: 700;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        border: 0;
+        border-radius: 999px;
+        background: var(--primary);
+        color: #fff;
+        padding: 12px 18px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .btn.full {
+        width: 100%;
+      }
+      .btn.ghost {
+        background: #dcefed;
+        color: #1d2b2a;
+      }
+      .btn:active {
+        transform: translateY(1px);
+      }
+
+      .bottom-bar {
+        position: sticky;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(
+          180deg,
+          rgba(246, 249, 249, 0),
+          rgba(246, 249, 249, 1) 30%
+        );
+        padding: 12px 16px 16px;
+      }
+
+      /* Home lists */
+      .list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .row {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 10px;
+      }
+      .row .pic {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: #dfecea;
+      }
+      .row .meta {
+        flex: 1;
+      }
+      .price {
+        font-weight: 800;
+      }
+
+      /* Detail */
+      .hero {
+        height: 160px;
+        border-radius: 16px;
+        background: #dfecea;
+      }
+      .pill {
+        font-size: 11px;
+        padding: 5px 8px;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        color: #4b6260;
+        background: #fff;
+        margin-right: 6px;
+      }
+      .qty {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .counter {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 6px 10px;
+        background: #fff;
+      }
+      .counter button {
+        border: 0;
+        background: #ecf6f5;
+        border-radius: 8px;
+        width: 26px;
+        height: 26px;
+        cursor: pointer;
+      }
+
+      /* Cart */
+      .cart-line {
+        display: grid;
+        grid-template-columns: 48px 1fr auto auto;
+        gap: 10px;
+        align-items: center;
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 10px;
+      }
+      .cart-line .xpic {
+        width: 48px;
+        height: 48px;
+        background: #dfecea;
+        border-radius: 10px;
+      }
+      .chip {
+        font-size: 12px;
+        color: #fff;
+        background: var(--primary);
+        padding: 3px 8px;
+        border-radius: 999px;
+      }
+
+      table.kv {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 8px;
+      }
+      table.kv td {
+        padding: 6px 0;
+        border-bottom: 1px dashed var(--border);
+      }
+      table.kv tr:last-child td {
+        border-bottom: 0;
+      }
+
+      /* Success */
+      .success-mark {
+        width: 140px;
+        height: 140px;
+        margin: 0 auto 16px;
+        border-radius: 999px;
+        background: #d9f1ed;
+        display: grid;
+        place-items: center;
+      }
+      .check {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        border: 10px solid var(--success);
+        position: relative;
+      }
+      .check:after {
+        content: "";
+        position: absolute;
+        left: 14px;
+        top: 16px;
+        width: 24px;
+        height: 44px;
+        border-right: 10px solid var(--success);
+        border-bottom: 10px solid var(--success);
+        transform: rotate(40deg);
+      }
+
+      /* Simple tabbar (mock) */
+      .tabbar {
+        display: flex;
+        justify-content: space-around;
+        padding: 8px 12px;
+        background: #fff;
+        border-top: 1px solid var(--border);
+      }
+      .tab {
+        display: grid;
+        place-items: center;
+        font-size: 12px;
+        color: #4b6260;
+      }
+
+      /* === Override style Categories mirip mockup === */
+      #page-categories .topbar {
+        background: #dff4f1; /* header mint */
+        border-bottom: 0;
+      }
+      #page-categories .topbar .title {
+        font-weight: 800;
+        font-size: 20px;
+      }
+
+      /* Search bar */
+      #page-categories .search {
+        background: #fff;
+        border: 1px solid #dbe7e5;
+        border-radius: 22px;
+        padding: 12px 14px;
+      }
+      #page-categories .search input::placeholder {
+        color: #9aa8a7;
+      }
+
+      /* Grid & card spacing */
+      #page-categories .section {
+        padding: 16px;
+      }
+      #page-categories .grid {
+        gap: 16px;
+      }
+
+      /* Card mint */
+      #page-categories .card {
+        background: #e2f7f3;
+        border: 0;
+        border-radius: 18px;
+        padding: 16px;
+        box-shadow: none;
+      }
+      #page-categories .thumb {
+        height: 64px;
+        border-radius: 14px;
+        background: #d9dedf;
+        margin-bottom: 12px;
+      }
+      #page-categories .card .name {
+        font-weight: 800;
+        font-size: 16px;
+        color: #253433;
+      }
+      #page-categories .card .label {
+        font-size: 12px;
+        color: #6b7c7b;
+      }
+
+      /* Selected outline */
+      #page-categories .card.selected::after {
+        content: "";
+        position: absolute;
+        inset: -4px;
+        border-radius: 22px;
+        border: 2px solid #1fa18f;
+      }
+
+      /* Continue button */
+      #continueBtn {
+        height: 54px;
+        border-radius: 999px;
+        font-weight: 800;
+        font-size: 16px;
+        background: linear-gradient(180deg, #2fb29f, #239e8d);
+      }
+
+      #continueBtn:disabled {
+        opacity: 0.5;
+      }
+
+      /* Promo Card */
+      .promo-card {
+        display: flex;
+        background: #fff;
+        border-radius: 16px;
+        padding: 16px;
+        gap: 16px;
+        margin-bottom: 16px;
+        align-items: center;
+      }
+      .promo-img {
+        width: 80px;
+        height: 80px;
+        border-radius: 12px;
+        background: #ddd;
+      }
+      .promo-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+      .promo-text {
+        font-size: 16px;
+        font-weight: 500;
+        margin-bottom: 8px;
+      }
+      .promo-btn {
+        background: #27ae90;
+        color: #fff;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 999px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      /* Option Filter */
+      .option-section {
+        margin-bottom: 12px;
+      }
+      .option-title {
+        font-weight: 700;
+        font-size: 16px;
+        margin-bottom: 8px;
+      }
+      .filter-chips {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto; /* scroll horizontal */
+        white-space: nowrap; /* biar item ga turun */
+        padding-bottom: 20px; /* kasih ruang biar ga nempel */
+        -webkit-overflow-scrolling: touch; /* smooth di mobile */
+      }
+      .filter-chip {
+        padding: 6px 14px;
+        border-radius: 999px;
+        background: #e5e5e5;
+        color: #777;
+        font-size: 14px;
+        white-space: nowrap;
+        cursor: pointer;
+      }
+      .filter-chip.active {
+        background: #d6f3ef;
+        color: #27ae90;
+        font-weight: 600;
+      }
+
+      .cart-summary {
+        padding: 12px;
+        border-radius: 12px;
+        background: #fff;
+        box-shadow: var(--shadow);
+        font-size: 14px;
+      }
+
+      .summary-row {
+        display: flex;
+        justify-content: space-between;
+        margin: 8px 0;
+      }
+
+      .summary-row.subtotal span:first-child,
+      .summary-row.total span:first-child {
+        font-weight: bold;
+        font-size: 15px;
+      }
+
+      .summary-row.total {
+        color: #24a393; /* hijau untuk total */
+        font-weight: bold;
+      }
+
+      .badge-free {
+        background: #d8f5f0;
+        color: #24a393;
+        padding: 2px 6px;
+        border-radius: 6px;
+        font-size: 12px;
+      }
+
+      .payment-options {
+        display: flex;
+        gap: 12px;
+      }
+
+      .payment-card {
+        width: 300px;
+        height: 100px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        border: 2px solid var(--border);
+        border-radius: 12px;
+        background: #f9f9f9;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .payment-card img {
+        width: 32px;
+        height: 32px;
+      }
+
+      .payment-card span {
+        font-size: 14px;
+        font-weight: 500;
+      }
+
+      .payment-card.active {
+        border-color: var(--primary);
+        background: #d6f3ef;
+      }
+
+      .cart-icon {
+        position: relative;
+        cursor: pointer;
+        font-size: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        background: #d8e9e7;
+        border-radius: 8px;
+      }
+
+      #cartBadge {
+        position: absolute;
+        top: -6px;
+        right: -6px;
+        background: #ff5a5f;
+        color: #fff;
+        font-size: 11px;
+        border-radius: 50%;
+        padding: 2px 5px;
+        min-width: 18px;
+        text-align: center;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <div class="phone">
+        <div class="phone-inner">
+          <!-- HEADER (changes per page via JS) -->
+          <div class="topbar">
+            <button id="backBtn" class="icon" aria-label="back">⟵</button>
+            <div id="headerTitle" class="title">Categories</div>
+            <div id="cartIcon" class="cart-icon" data-go="page-cart">
+              🛒
+              <span id="cartBadge">0</span>
+            </div>
+          </div>
+          <!-- PAGES -->
+
+          <!-- Select Categories -->
+          <section id="page-categories" class="page active">
+            <div class="section">
+              <div class="search" style="margin-bottom: 12px">
+                <input placeholder="Search Categories Food…" />
+                <span class="icon">🔍</span>
+              </div>
+              <div class="grid" style="margin-bottom: 14px">
+                <div class="card">
+                  <div class="thumb"></div>
+                  <div class="name">Indonesia Food</div>
+                  <div class="label">23 Menu</div>
+                </div>
+                <div class="card">
+                  <div class="thumb"></div>
+                  <div class="name">Korean Food</div>
+                  <div class="label">7 Menu</div>
+                </div>
+                <div class="card">
+                  <div class="thumb"></div>
+                  <div class="name">Italian Food</div>
+                  <div class="label">8 Menu</div>
+                </div>
+                <div class="card">
+                  <div class="thumb"></div>
+                  <div class="name">Japan Food</div>
+                  <div class="label">6 Menu</div>
+                </div>
+                <div class="card">
+                  <div class="thumb"></div>
+                  <div class="name">Indian Food</div>
+                  <div class="label">9 Menu</div>
+                </div>
+                <div class="card">
+                  <div class="thumb"></div>
+                  <div class="name">France Food</div>
+                  <div class="label">7 Menu</div>
+                </div>
+              </div>
+            </div>
+            <div class="bottom-bar">
+              <button id="continueBtn" class="btn full" disabled>
+                Continue
+              </button>
+            </div>
+          </section>
+
+          <!-- Home -->
+          <section id="page-home" class="page">
+            <!-- Promo Card -->
+            <div class="promo-card">
+              <div class="promo-img"></div>
+              <div class="promo-content">
+                <div class="promo-text">
+                  70% discount on all traditional drink product
+                </div>
+                <button class="promo-btn">Get Now</button>
+              </div>
+            </div>
+
+            <div class="section">
+              <!-- Option Filter -->
+              <div class="option-section">
+                <div class="option-title">Option</div>
+                <div class="filter-chips">
+                  <div class="filter-chip active">All</div>
+                  <div class="filter-chip">Traditional Drink</div>
+                  <div class="filter-chip">Traditional Food</div>
+                  <div class="filter-chip">Traditional Snack</div>
+                </div>
+              </div>
+              <hr />
+
+              <div class="label" style="margin: 10px 0 6px">Popular Menu</div>
+              <div class="list" id="homePopular"></div>
+
+              <div class="label" style="margin: 16px 0 6px">Favorite Menu</div>
+              <div class="list" id="homeFav"></div>
+            </div>
+          </section>
+
+          <!-- Detail Product -->
+          <section id="page-detail" class="page">
+            <div class="section">
+              <div
+                class="name"
+                id="detailName"
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  margin-bottom: 4px;
+                "
+              >
+                <span>Gudeg Assiap</span
+                ><span class="price" id="detailPrice">$20</span>
+              </div>
+              <br />
+              <div class="label" id="detailDesc">
+                Classic recipe from the latest innovation of the modern world…
+              </div>
+              <br />
+
+              <!-- Lokasi & Favorite -->
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  margin-bottom: 8px;
+                "
+              >
+                <div
+                  id="detailLocation"
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                    color: #888;
+                  "
+                >
+                  📍 Nganu, Pinggir kali cacaban...
+                </div>
+                <div style="color: teal; font-size: 18px">♡</div>
+              </div>
+
+              <!-- Hero / Gambar -->
+              <div
+                class="hero"
+                style="
+                  margin: 10px 0 8px;
+                  background: #eee;
+                  height: 200px;
+                  border-radius: 12px;
+                "
+              ></div>
+
+              <!-- Rating & Waktu -->
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: space-between;
+                  margin: 8px 0;
+                  color: #888;
+                "
+              >
+                <div style="display: flex; align-items: center; gap: 4px">
+                  ⭐ 4,9
+                </div>
+                <div style="display: flex; align-items: center; gap: 4px">
+                  ⏱ 45 min
+                </div>
+              </div>
+
+              <div class="option-section">
+                <div class="option-title">Variant</div>
+                <div class="filter-chips" id="variantGroup"></div>
+              </div>
+
+              <div class="option-section">
+                <div class="option-title">Spicy Level</div>
+                <div class="filter-chips" id="spicyGroup"></div>
+              </div>
+
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  gap: 10px;
+                "
+              >
+                <div class="counter">
+                  <button id="minusBtn">–</button>
+                  <strong id="qtyNum">1</strong>
+                  <button id="plusBtn">+</button>
+                </div>
+                <button class="btn" id="addToCartBtn" style="flex: 1">
+                  Add to Cart
+                </button>
+              </div>
+            </div>
+          </section>
+
+          <!-- Cart -->
+          <section id="page-cart" class="page">
+            <div class="section">
+              <div id="cartList" class="list" style="margin-bottom: 10px"></div>
+              <div class="card cart-summary">
+                <div class="summary-row subtotal">
+                  <span>SUBTOTAL</span>
+                  <span id="cartSubtotal">$0</span>
+                </div>
+                <hr />
+                <div class="summary-row">
+                  <span>Discount</span>
+                  <span id="cartDiscount">$0</span>
+                </div>
+                <div class="summary-row">
+                  <span>Delivery Charge</span>
+                  <span id="cartDelivery"
+                    ><span class="badge-free">Free</span></span
+                  >
+                </div>
+                <div class="summary-row">
+                  <span>Taxes & Charge</span>
+                  <span id="cartTax">$0</span>
+                </div>
+                <hr />
+                <div class="summary-row total">
+                  <span>TOTAL AMOUNT</span>
+                  <span id="cartTotal">$0</span>
+                </div>
+              </div>
+            </div>
+            <div class="bottom-bar">
+              <div style="display: flex; gap: 10px; align-items: center">
+                <button class="btn full" data-go="page-checkout">
+                  Checkout <span id="cartItemsCount">(0 Items)</span>
+                </button>
+              </div>
+            </div>
+          </section>
+
+          <!-- Checkout -->
+          <section id="page-checkout" class="page">
+            <div class="section">
+              <!-- Summary Harga -->
+              <div
+                class="card"
+                style="margin-bottom: 12px; padding: 16px; border-radius: 12px"
+              >
+                <div class="summary-row subtotal">
+                  <span>SUBTOTAL</span>
+                  <span id="chkSubtotal">$0</span>
+                </div>
+                <div class="summary-row">
+                  <span>Discount</span>
+                  <span id="chkDiscount">$10</span>
+                </div>
+                <div class="summary-row">
+                  <span>Delivery Charge</span>
+                  <span id="chkDelivery"
+                    ><span class="badge-free">Free</span></span
+                  >
+                </div>
+                <div class="summary-row">
+                  <span>Taxes & Charge</span>
+                  <span id="chkTax">$2</span>
+                </div>
+                <hr />
+                <div class="summary-row total">
+                  <span>TOTAL AMOUNT</span>
+                  <span id="chkTotal">$0</span>
+                </div>
+              </div>
+
+              <!-- Delivery Option -->
+              <div
+                class="card"
+                style="margin-bottom: 12px; padding: 16px; border-radius: 12px"
+              >
+                <!-- Baris 1 -->
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    margin-bottom: 6px;
+                    font-weight: bold;
+                  "
+                >
+                  <span>Delivery Option</span>
+                  <span style="font-size: 14px; color: #999">In 45 min</span>
+                </div>
+
+                <!-- Baris 2 -->
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: flex-start;
+                  "
+                >
+                  <div style="font-size: 14px">
+                    Blok 4, House No.47<br />
+                    Asamble Village,<br />
+                    Perempatan Sipucung
+                  </div>
+                  <a href="#" style="color: var(--primary); font-size: 14px"
+                    >Change</a
+                  >
+                </div>
+
+                <!-- Input -->
+                <input
+                  type="text"
+                  placeholder="More information....."
+                  style="
+                    width: 100%;
+                    margin-top: 8px;
+                    padding: 8px;
+                    border-radius: 8px;
+                    border: 1px solid var(--border);
+                    font-size: 14px;
+                  "
+                />
+              </div>
+
+              <!-- Select Payment -->
+              <div class="label" style="margin: 6px 0; font-weight: bold;">Select Payment</div>
+              <div class="payment-options">
+                <div class="payment-card active">
+                  <img src="icons/wallet.svg" alt="Dieting Pay">
+                  <span>Dieting Pay</span>
+                </div>
+                <div class="payment-card">
+                  <img src="icons/visa.svg" alt="Visa">
+                  <span>Visa</span>
+                </div>
+                <div class="payment-card">
+                  <img src="icons/mastercard.svg" alt="Mastercard">
+                  <span>Mastercard</span>
+                </div>
+                <div class="payment-card">
+                  <img src="icons/bank.svg" alt="Bank">
+                  <span>Bank</span>
+                </div>
+              </div>
+
+            <!-- Tombol Payment -->
+            <div class="bottom-bar">
+              <button class="btn full" id="payBtn">Payment</button>
+            </div>
+          </section>
+
+          <!-- Success -->
+          <section id="page-success" class="page">
+            <div class="section" style="text-align: center">
+              <div class="success-mark"><div class="check"></div></div>
+              <h2>Congratulations!</h2>
+              <p class="label">"Congratulations! Your payment has been successful. Your order is being processed and will be sent soon. Thank you for using our application!"</p>
+              <div
+                class="card"
+                style="margin-bottom: 12px; padding: 16px; border-radius: 12px"
+              >
+                <div class="summary-row subtotal">
+                  <span>SUBTOTAL</span>
+                  <span id="sxSubtotal">$0</span>
+                </div>
+                <div class="summary-row">
+                  <span>Discount</span>
+                  <span id="sxDiscount">$10</span>
+                </div>
+                <div class="summary-row">
+                  <span>Delivery Charge</span>
+                  <span id="sxDelivery"
+                    ><span class="badge-free">Free</span></span
+                  >
+                </div>
+                <div class="summary-row">
+                  <span>Taxes & Charge</span>
+                  <span id="sxTax">$2</span>
+                </div>
+                <hr />
+                <div class="summary-row total">
+                  <span>TOTAL AMOUNT</span>
+                  <span id="sxTotal">$0</span>
+                </div>
+              </div>
+            </div>
+            <div class="bottom-bar">
+              <button class="btn full" data-go="page-home">Back to Home</button>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // KATALOG per kategori (lengkap, contoh)
+      const catalogByCategory = {
+        "Indonesia Food": {
+          popular: [
+            {
+              id: "gudeg",
+              name: "Gudeg Assiap",
+              price: 20,
+              desc: "Gudeg Assisi is the result of the latest innovation in the culinary world which combines classic flavors with a modern nuance. Taking inspiration from gudeg a typical Yogyakarta dish that is rich in spices and deep deliciousness.",
+              location: "Kemang, ngalor sitik tekan",
+              reviewer: 350,
+              variant: [
+                { name: "Gudeg Jumbo", extraPrice: 5 },
+                { name: "Gudeg Regular", extraPrice: 0 },
+                { name: "Gudeg Mini", extraPrice: -2 },
+              ],
+            },
+            {
+              id: "sate",
+              name: "Sate Ayam Madura",
+              price: 18,
+              desc: "Grilled chicken skewers with peanut sauce.",
+              location: "Sigude, ngetan sitik tekan",
+              reviewer: 200,
+              variant: [
+                { name: "Sate 15 pcs", extraPrice: 5 },
+                { name: "Sate 10 pcs", extraPrice: 0 },
+                { name: "Sate 5 pcs", extraPrice: -2 },
+              ],
+            },
+            {
+              id: "rendang",
+              name: "Rendang Padang",
+              price: 24,
+              desc: "Slow-cooked beef in rich coconut spice.",
+              location: "Kemang, ngalor sitik tekan",
+              reviewer: 150,
+              variant: [
+                { name: "Rendang Jumbo", extraPrice: 5 },
+                { name: "Rendang Regular", extraPrice: 0 },
+                { name: "Rendang Mini", extraPrice: -2 },
+              ],
+            },
+          ],
+          favorite: [
+            {
+              id: "bakso",
+              name: "Bakso Malang",
+              price: 19,
+              desc: "Beef meatball soup with tofu and pangsit.",
+              location: "Leyang, anjasmara",
+              reviewer: 150,
+              variant: [
+                { name: "Bakso Jumbo", extraPrice: 5 },
+                { name: "Bakso Regular", extraPrice: 0 },
+                { name: "Bakso Mini", extraPrice: -2 },
+              ],
+            },
+            {
+              id: "dawet",
+              name: "Es Dawet Ayu",
+              price: 10,
+              desc: "Iced cendol with palm sugar and coconut milk.",
+              location: "Kelang, samping gang",
+              reviewer: 250,
+              variant: [
+                { name: "Dawet Jumbo", extraPrice: 5 },
+                { name: "Dawet Regular", extraPrice: 0 },
+                { name: "Dawet Mini", extraPrice: -2 },
+              ],
+            },
+            {
+              id: "klepon",
+              name: "Klepon",
+              price: 12,
+              desc: "Sticky rice balls filled with palm sugar.",
+              location: "Jogja, sitik tekan",
+              reviewer: 450,
+              variant: [
+                { name: "Klepon Jumbo", extraPrice: 5 },
+                { name: "Klepon Regular", extraPrice: 0 },
+                { name: "Klepon Mini", extraPrice: -2 },
+              ],
+            },
+          ],
+        },
+        "Korean Food": {
+          popular: [
+            {
+              id: "bibimbap",
+              name: "Bibimbap",
+              price: 22,
+              desc: "Mixed rice with veggies, beef, and gochujang.",
+              location: "Kemang, ngalor sitik tekan",
+              reviewer: 350,
+              variant: [
+                { name: "Jumbo", extraPrice: 5 },
+                { name: "Regular", extraPrice: 0 },
+                { name: "Mini", extraPrice: -2 },
+              ],
+            },
+            {
+              id: "bulgogi",
+              name: "Bulgogi",
+              price: 23,
+              desc: "Marinated grilled beef.",
+              location: "Kemang, ngalor sitik tekan",
+              reviewer: 350,
+              variant: [
+                { name: "Jumbo", extraPrice: 5 },
+                { name: "Regular", extraPrice: 0 },
+                { name: "Mini", extraPrice: -2 },
+              ],
+            },
+            {
+              id: "kimchi-jjigae",
+              name: "Kimchi Jjigae",
+              price: 18,
+              desc: "Spicy kimchi stew.",
+              location: "Kemang, ngalor sitik tekan",
+              reviewer: 350,
+              variant: [
+                { name: "Jumbo", extraPrice: 5 },
+                { name: "Regular", extraPrice: 0 },
+                { name: "Mini", extraPrice: -2 },
+              ],
+            },
+          ],
+          favorite: [
+            {
+              id: "tteok",
+              name: "Tteokbokki",
+              price: 16,
+              desc: "Chewy spicy rice cakes.",
+              location: "Kemang, ngalor sitik tekan",
+              reviewer: 350,
+              variant: [
+                { name: "Jumbo", extraPrice: 5 },
+                { name: "Regular", extraPrice: 0 },
+                { name: "Mini", extraPrice: -2 },
+              ],
+            },
+            {
+              id: "kfc",
+              name: "Korean Fried Chicken",
+              price: 20,
+              desc: "Crispy double-fried, sweet-spicy glaze.",
+              location: "Kemang, ngalor sitik tekan",
+              reviewer: 350,
+              variant: [
+                { name: "Jumbo", extraPrice: 5 },
+                { name: "Regular", extraPrice: 0 },
+                { name: "Mini", extraPrice: -2 },
+              ],
+            },
+            {
+              id: "ramyeon",
+              name: "Ramyeon",
+              price: 14,
+              desc: "Comfort noodle soup Korean-style.",
+              location: "Kemang, ngalor sitik tekan",
+              reviewer: 350,
+              variant: [
+                { name: "Jumbo", extraPrice: 5 },
+                { name: "Regular", extraPrice: 0 },
+                { name: "Mini", extraPrice: -2 },
+              ],
+            },
+          ],
+        },
+        "Italian Food": {
+          popular: [
+            {
+              id: "carbonara",
+              name: "Pasta Carbonara",
+              price: 21,
+              desc: "Egg, pecorino, guanciale, black pepper.",
+              location: "Kemang, ngalor sitik tekan",
+              reviewer: 350,
+              variant: [
+                { name: "Jumbo", extraPrice: 5 },
+                { name: "Regular", extraPrice: 0 },
+                { name: "Mini", extraPrice: -2 },
+              ],
+            },
+            {
+              id: "margherita",
+              name: "Pizza Margherita",
+              price: 20,
+              desc: "Tomato, mozzarella, basil.",
+              location: "Kemang, ngalor sitik tekan",
+              reviewer: 350,
+              variant: [
+                { name: "Jumbo", extraPrice: 5 },
+                { name: "Regular", extraPrice: 0 },
+                { name: "Mini", extraPrice: -2 },
+              ],
+            },
+            {
+              id: "lasagna",
+              name: "Lasagna",
+              price: 24,
+              desc: "Layered pasta with ragù and béchamel.",
+              location: "Kemang, ngalor sitik tekan",
+              reviewer: 350,
+              variant: [
+                { name: "Jumbo", extraPrice: 5 },
+                { name: "Regular", extraPrice: 0 },
+                { name: "Mini", extraPrice: -2 },
+              ],
+            },
+          ],
+          favorite: [
+            {
+              id: "risotto",
+              name: "Risotto Funghi",
+              price: 23,
+              desc: "Creamy mushroom risotto.",
+              location: "Kemang, ngalor sitik tekan",
+              reviewer: 350,
+              variant: [
+                { name: "Jumbo", extraPrice: 5 },
+                { name: "Regular", extraPrice: 0 },
+                { name: "Mini", extraPrice: -2 },
+              ],
+            },
+            {
+              id: "pesto",
+              name: "Pasta al Pesto",
+              price: 19,
+              desc: "Basil pesto, pine nuts, parmesan.",
+              location: "Kemang, ngalor sitik tekan",
+              reviewer: 350,
+              variant: [
+                { name: "Jumbo", extraPrice: 5 },
+                { name: "Regular", extraPrice: 0 },
+                { name: "Mini", extraPrice: -2 },
+              ],
+            },
+            {
+              id: "tiramisu",
+              name: "Tiramisu",
+              price: 12,
+              desc: "Coffee-soaked ladyfingers, mascarpone.",
+              location: "Kemang, ngalor sitik tekan",
+              reviewer: 350,
+              variant: [
+                { name: "Jumbo", extraPrice: 5 },
+                { name: "Regular", extraPrice: 0 },
+                { name: "Mini", extraPrice: -2 },
+              ],
+            },
+          ],
+        },
+        "Japan Food": {
+          popular: [
+            {
+              id: "ramen-shoyu",
+              name: "Ramen Shoyu",
+              price: 19,
+              desc: "Soy-sauce broth ramen.",
+              location: "Kemang, ngalor sitik tekan",
+              reviewer: 350,
+              variant: [
+                { name: "Jumbo", extraPrice: 5 },
+                { name: "Regular", extraPrice: 0 },
+                { name: "Mini", extraPrice: -2 },
+              ],
+            },
+            {
+              id: "gyudon",
+              name: "Gyudon",
+              price: 18,
+              desc: "Beef bowl with onions.",
+              location: "Kemang, ngalor sitik tekan",
+              reviewer: 350,
+              variant: [
+                { name: "Jumbo", extraPrice: 5 },
+                { name: "Regular", extraPrice: 0 },
+                { name: "Mini", extraPrice: -2 },
+              ],
+            },
+            {
+              id: "katsu",
+              name: "Chicken Katsu",
+              price: 17,
+              desc: "Panko-fried chicken cutlet.",
+              location: "Kemang, ngalor sitik tekan",
+              reviewer: 350,
+              variant: [
+                { name: "Jumbo", extraPrice: 5 },
+                { name: "Regular", extraPrice: 0 },
+                { name: "Mini", extraPrice: -2 },
+              ],
+            },
+          ],
+          favorite: [
+            {
+              id: "sushi",
+              name: "Sushi Mix",
+              price: 26,
+              desc: "Assorted nigiri & maki.",
+              location: "Kemang, ngalor sitik tekan",
+              reviewer: 350,
+              variant: [
+                { name: "Jumbo", extraPrice: 5 },
+                { name: "Regular", extraPrice: 0 },
+                { name: "Mini", extraPrice: -2 },
+              ],
+            },
+            {
+              id: "takoyaki",
+              name: "Takoyaki",
+              price: 14,
+              desc: "Octopus balls, bonito flakes.",
+              location: "Kemang, ngalor sitik tekan",
+              reviewer: 350,
+              variant: [
+                { name: "Jumbo", extraPrice: 5 },
+                { name: "Regular", extraPrice: 0 },
+                { name: "Mini", extraPrice: -2 },
+              ],
+            },
+            {
+              id: "okonomiyaki",
+              name: "Okonomiyaki",
+              price: 18,
+              desc: "Savory cabbage pancake.",
+              location: "Kemang, ngalor sitik tekan",
+              reviewer: 350,
+              variant: [
+                { name: "Jumbo", extraPrice: 5 },
+                { name: "Regular", extraPrice: 0 },
+                { name: "Mini", extraPrice: -2 },
+              ],
+            },
+          ],
+        },
+        "Indian Food": {
+          popular: [
+            {
+              id: "butter-chicken",
+              name: "Butter Chicken",
+              price: 21,
+              desc: "Creamy tomato-butter gravy.",
+              location: "Kemang, ngalor sitik tekan",
+              reviewer: 350,
+              variant: [
+                { name: "Jumbo", extraPrice: 5 },
+                { name: "Regular", extraPrice: 0 },
+                { name: "Mini", extraPrice: -2 },
+              ],
+            },
+            {
+              id: "biryani",
+              name: "Chicken Biryani",
+              price: 22,
+              desc: "Fragrant spiced rice.",
+              location: "Kemang, ngalor sitik tekan",
+              reviewer: 350,
+              variant: [
+                { name: "Jumbo", extraPrice: 5 },
+                { name: "Regular", extraPrice: 0 },
+                { name: "Mini", extraPrice: -2 },
+              ],
+            },
+            {
+              id: "paneer-tikka",
+              name: "Paneer Tikka",
+              price: 19,
+              desc: "Grilled cottage cheese with spices.",
+              location: "Kemang, ngalor sitik tekan",
+              reviewer: 350,
+              variant: [
+                { name: "Jumbo", extraPrice: 5 },
+                { name: "Regular", extraPrice: 0 },
+                { name: "Mini", extraPrice: -2 },
+              ],
+            },
+          ],
+          favorite: [
+            {
+              id: "masala-dosa",
+              name: "Masala Dosa",
+              price: 16,
+              desc: "Crispy crepe with spiced potato.",
+              location: "Kemang, ngalor sitik tekan",
+              reviewer: 350,
+              variant: [
+                { name: "Jumbo", extraPrice: 5 },
+                { name: "Regular", extraPrice: 0 },
+                { name: "Mini", extraPrice: -2 },
+              ],
+            },
+            {
+              id: "chana-masala",
+              name: "Chana Masala",
+              price: 17,
+              desc: "Chickpeas in tangy gravy.",
+              location: "Kemang, ngalor sitik tekan",
+              reviewer: 350,
+              variant: [
+                { name: "Jumbo", extraPrice: 5 },
+                { name: "Regular", extraPrice: 0 },
+                { name: "Mini", extraPrice: -2 },
+              ],
+            },
+            {
+              id: "naan",
+              name: "Garlic Naan",
+              price: 8,
+              desc: "Leavened flatbread, garlic & butter.",
+              location: "Kemang, ngalor sitik tekan",
+              reviewer: 350,
+              variant: [
+                { name: "Jumbo", extraPrice: 5 },
+                { name: "Regular", extraPrice: 0 },
+                { name: "Mini", extraPrice: -2 },
+              ],
+            },
+          ],
+        },
+        "France Food": {
+          popular: [
+            {
+              id: "quiche",
+              name: "Quiche Lorraine",
+              price: 23,
+              desc: "Savory custard tart with bacon.",
+              location: "Kemang, ngalor sitik tekan",
+              reviewer: 350,
+              variant: [
+                { name: "Jumbo", extraPrice: 5 },
+                { name: "Regular", extraPrice: 0 },
+                { name: "Mini", extraPrice: -2 },
+              ],
+            },
+            {
+              id: "ratatouille",
+              name: "Ratatouille",
+              price: 19,
+              desc: "Provencal stewed vegetables.",
+              location: "Kemang, ngalor sitik tekan",
+              reviewer: 350,
+              variant: [
+                { name: "Jumbo", extraPrice: 5 },
+                { name: "Regular", extraPrice: 0 },
+                { name: "Mini", extraPrice: -2 },
+              ],
+            },
+            {
+              id: "coq-au-vin",
+              name: "Coq au Vin",
+              price: 26,
+              desc: "Chicken braised in red wine.",
+              location: "Kemang, ngalor sitik tekan",
+              reviewer: 350,
+              variant: [
+                { name: "Jumbo", extraPrice: 5 },
+                { name: "Regular", extraPrice: 0 },
+                { name: "Mini", extraPrice: -2 },
+              ],
+            },
+          ],
+          favorite: [
+            {
+              id: "bouillabaisse",
+              name: "Bouillabaisse",
+              price: 28,
+              desc: "Marseille fish stew.",
+              location: "Kemang, ngalor sitik tekan",
+              reviewer: 350,
+              variant: [
+                { name: "Jumbo", extraPrice: 5 },
+                { name: "Regular", extraPrice: 0 },
+                { name: "Mini", extraPrice: -2 },
+              ],
+            },
+            {
+              id: "creme-brulee",
+              name: "Crème Brûlée",
+              price: 12,
+              desc: "Caramelized custard dessert.",
+              location: "Kemang, ngalor sitik tekan",
+              reviewer: 350,
+              variant: [
+                { name: "Jumbo", extraPrice: 5 },
+                { name: "Regular", extraPrice: 0 },
+                { name: "Mini", extraPrice: -2 },
+              ],
+            },
+            {
+              id: "croque",
+              name: "Croque Monsieur",
+              price: 15,
+              desc: "Griddled ham & cheese sandwich.",
+              location: "Kemang, ngalor sitik tekan",
+              reviewer: 350,
+              variant: [
+                { name: "Jumbo", extraPrice: 5 },
+                { name: "Regular", extraPrice: 0 },
+                { name: "Mini", extraPrice: -2 },
+              ],
+            },
+          ],
+        },
+      };
+
+      // --- Mock data ---
+      const products = [
+        {
+          id: "dawet",
+          name: "Dawet Ayu",
+          price: 10,
+          desc: "Javanese iced dessert with palm sugar and coconut milk.",
+        },
+        {
+          id: "klepon",
+          name: "Klepon Maknyus",
+          price: 15,
+          desc: "Sticky rice balls filled with palm sugar and coconut sprinkles.",
+        },
+        {
+          id: "bakso",
+          name: "Bakso Ya'Ke",
+          price: 20,
+          desc: "Beef meatball soup, hearty and savory.",
+        },
+        {
+          id: "bajigur",
+          name: "Bajigur Loncat",
+          price: 12,
+          desc: "Warm coconut milk drink with palm sugar and ginger.",
+        },
+      ];
+
+      const cart = new Map(); // key -> {id,name,price,qty}
+
+      // --- Helpers ---
+      const $ = (sel, root = document) => root.querySelector(sel);
+      const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
+
+      function setHeader(title, showBack) {
+        $("#headerTitle").textContent = title;
+        $("#backBtn").style.visibility = showBack ? "visible" : "hidden";
+      }
+
+      function showPage(id) {
+        $$(".page").forEach((p) => p.classList.remove("active"));
+        const page = $("#" + id);
+        page.classList.add("active");
+        currentPage = id;
+        // header titles
+        const titles = {
+          "page-categories": "Categories",
+          "page-home": "Home",
+          "page-detail": "Food Detail",
+          "page-cart": "Cart",
+          "page-checkout": "Checkout",
+          "page-success": "Success",
+        };
+        setHeader(titles[id] || "Food App", id !== "page-categories");
+        historyStack.push(id);
+      }
+
+      // Ganti renderHome agar ambil dari catalogByCategory
+      function renderHome(selectedCategory) {
+        const targetA = $("#homePopular");
+        const targetB = $("#homeFav");
+        targetA.innerHTML = "";
+        targetB.innerHTML = "";
+
+        if (!selectedCategory || !catalogByCategory[selectedCategory]) return;
+
+        const { popular, favorite } = catalogByCategory[selectedCategory];
+
+        popular.forEach((p) => {
+          const el = document.createElement("div");
+          el.className = "row";
+          el.innerHTML = `
+          <div class="pic"></div>
+          <div class="meta">
+            <div class="name">${p.name}</div>
+            <div class="label"><span class="icon-location">📍</span> ${
+              p.location || "Unknown location"
+            }</div>
+            <div class="label"><span class="icon-star">⭐</span> (${
+              p.reviewer || 0
+            } reviewer)</div>
+          </div>
+          <div class="price">$${p.price}</div>
+        `;
+          el.addEventListener("click", () => openDetail(p));
+          targetA.appendChild(el);
+        });
+
+        favorite.forEach((p) => {
+          const el = document.createElement("div");
+          el.className = "row";
+          el.innerHTML = `
+          <div class="pic"></div>
+          <div class="meta">
+            <div class="name">${p.name}</div>
+            <div class="label"><span class="icon-location">📍</span> ${
+              p.location || "Unknown location"
+            }</div>
+            <div class="label"><span class="icon-star">⭐</span> (${
+              p.reviewer || 0
+            } reviewer)</div>
+          </div>
+          <div class="price">$${p.price}</div>
+        `;
+          el.addEventListener("click", () => openDetail(p));
+          targetB.appendChild(el);
+        });
+      }
+
+      document.querySelectorAll(".payment-card").forEach(card => {
+        card.addEventListener("click", () => {
+          document.querySelectorAll(".payment-card").forEach(c => c.classList.remove("active"));
+          card.classList.add("active");
+        });
+      });
+
+      document.querySelectorAll(".filter-chip").forEach((chip) => {
+        chip.addEventListener("click", () => {
+          // hapus active dari semua chip
+          document
+            .querySelectorAll(".filter-chip")
+            .forEach((c) => c.classList.remove("active"));
+          // tambahkan active ke chip yang diklik
+          chip.classList.add("active");
+
+          // kalau mau ambil value yang dipilih:
+          const selectedOption = chip.textContent.trim();
+          console.log("Selected:", selectedOption);
+
+          // kalau mau filter data bisa panggil function filter disini
+          // filterMenu(selectedOption);
+        });
+      });
+
+      // Detail
+      let currentDetail = null;
+      let qty = 1;
+      function openDetail(p) {
+        currentDetail = p;
+        qty = 1;
+        updateQty();
+        $("#detailName span").textContent = p.name;
+        $("#detailPrice").textContent = `$${p.price}`;
+        $("#detailDesc").textContent = p.desc;
+        $("#detailLocation").textContent =
+          "📍 " + p.location || "Unknown location";
+
+        const variantGroup = document.getElementById("variantGroup");
+        variantGroup.innerHTML = "";
+
+        if (Array.isArray(p.variant) && p.variant.length > 0) {
+          p.variant.forEach((v, i) => {
+            const chip = document.createElement("div");
+            chip.className = "filter-chip" + (i === 0 ? " active" : "");
+            chip.dataset.value = v.name;
+            chip.dataset.extra = v.extraPrice || 0;
+            const extraPrice =
+              v.extraPrice > 0 ? `(+${v.extraPrice})` : `(${v.extraPrice})`;
+            chip.textContent = `${v.name} ${
+              v.extraPrice ? `${extraPrice}` : ""
+            }`;
+
+            chip.addEventListener("click", () => {
+              variantGroup
+                .querySelectorAll(".filter-chip")
+                .forEach((c) => c.classList.remove("active"));
+              chip.classList.add("active");
+            });
+
+            variantGroup.appendChild(chip);
+          });
+        } else {
+          variantGroup.innerHTML = "<em>No variant available</em>";
+        }
+
+        // === Render Spicy Level ===
+        const spicyGroup = document.getElementById("spicyGroup");
+        spicyGroup.innerHTML = "";
+
+        const spicyLevels = [
+          "Level 1",
+          "Level 2",
+          "Level 3",
+          "Level 4",
+          "Level 5",
+        ];
+        spicyLevels.forEach((level, i) => {
+          const chip = document.createElement("div");
+          chip.className = "filter-chip" + (i === 0 ? " active" : "");
+          chip.dataset.value = level;
+          chip.textContent = level;
+
+          chip.addEventListener("click", () => {
+            spicyGroup
+              .querySelectorAll(".filter-chip")
+              .forEach((c) => c.classList.remove("active"));
+            chip.classList.add("active");
+          });
+
+          spicyGroup.appendChild(chip);
+        });
+
+        showPage("page-detail");
+      }
+      function updateQty() {
+        $("#qtyNum").textContent = qty;
+      }
+
+      // Cart
+      function upsertCart(p, q) {
+        const key = `${p.id}-${p.variant || ""}-${p.spicy || ""}`;
+        const row = cart.get(key) || {
+          id: p.id,
+          name: p.name,
+          price: p.price,
+          qty: 0,
+          variant: p.variant || null,
+          spicy: p.spicy || null,
+        };
+        row.qty += q;
+        if (row.qty <= 0) cart.delete(key);
+        else cart.set(key, row);
+        renderCart();
+      }
+
+      function updateCartBadge() {
+        const totalItems = [...cart.values()].reduce((sum, item) => sum + item.qty, 0);
+        document.getElementById("cartBadge").textContent = totalItems;
+      }
+
+      function renderCart() {
+        const list = $("#cartList");
+        list.innerHTML = "";
+        let subtotal = 0,
+          count = 0;
+        cart.forEach((item) => {
+          subtotal += item.price * item.qty;
+          count += item.qty;
+          const line = document.createElement("div");
+          line.className = "cart-line";
+          line.innerHTML = `
+          <div class="xpic"></div>
+          <div>
+            <div class="name">${item.name} + ${item.variant}</div>
+            <div class="label">$${item.price} • each</div>
+          </div>
+          <div>
+            <div class="price" style="justify-self:center; margin-bottom: 6px;">
+              $${item.price * item.qty}
+            </div>
+            <div class="counter" style="justify-self:end">
+              <button class="dec">–</button>
+              <strong>${item.qty}</strong>
+              <button class="inc">+</button>
+            </div>
+          </div>
+        `;
+          line.querySelector(".dec").addEventListener("click", () => {
+            upsertCart(item, -1);
+          });
+          line.querySelector(".inc").addEventListener("click", () => {
+            upsertCart(item, 1);
+          });
+          list.appendChild(line);
+        });
+        const discount = Math.min(10, subtotal * 0.15) | 0; // playful
+        const delivery = subtotal > 0 ? 0 : 0;
+        const total = subtotal - discount + delivery;
+        $("#cartSubtotal").textContent = `$${subtotal}`;
+        $("#cartDiscount").textContent = `$${discount}`;
+        $("#cartDelivery").textContent = delivery ? `$${delivery}` : "$0";
+        $("#cartTotal").textContent = `$${total}`;
+        $("#cartItemsCount").textContent = `(${count} Items)`;
+
+        // mirror to checkout/success
+        $("#chkSubtotal").textContent = `$${subtotal}`;
+        $("#chkDiscount").textContent = `$${discount}`;
+        $("#chkDelivery").textContent = "Free";
+        $("#chkTax").textContent = "$2";
+        $("#chkTotal").textContent = `$${total + 2}`;
+
+        $("#sxSubtotal").textContent = `$${subtotal}`;
+        $("#sxDiscount").textContent = `$${discount}`;
+        $("#sxTax").textContent = "$2";
+        $("#sxTotal").textContent = `$${total + 2}`;
+
+        updateCartBadge();
+      }
+
+      // Navigation + events
+      let currentPage = "page-categories";
+      const historyStack = [];
+
+      $("#backBtn").addEventListener("click", () => {
+        // pop current
+        historyStack.pop();
+        const prev = historyStack.pop() || "page-categories";
+        showPage(prev);
+      });
+
+      document.addEventListener("click", (e) => {
+        const go = e.target.closest("[data-go]");
+        if (go) {
+          showPage(go.getAttribute("data-go"));
+        }
+      });
+
+      $("#plusBtn").addEventListener("click", () => {
+        qty++;
+        updateQty();
+      });
+      $("#minusBtn").addEventListener("click", () => {
+        qty = Math.max(1, qty - 1);
+        updateQty();
+      });
+      $("#addToCartBtn").addEventListener("click", () => {
+        if (currentDetail) {
+          const variantChip = document.querySelector(
+            "#variantGroup .filter-chip.active"
+          );
+          const spicyChip = document.querySelector(
+            "#spicyGroup .filter-chip.active"
+          );
+
+          const selectedVariant = variantChip?.dataset.value || null;
+          const extraPrice = parseFloat(variantChip?.dataset.extra || 0);
+          const selectedSpicy = spicyChip?.dataset.value || null;
+
+          const itemToAdd = {
+            ...currentDetail,
+            variant: selectedVariant,
+            spicy: selectedSpicy,
+            price: currentDetail.price + extraPrice, // total harga
+          };
+
+          upsertCart(itemToAdd, qty);
+        }
+      });
+
+      $("#payBtn").addEventListener("click", () => {
+        showPage("page-success");
+      });
+
+      // init
+      renderHome();
+      renderCart();
+
+      // Categories selection logic
+      (function () {
+        const page = document.getElementById("page-categories");
+        if (!page) return;
+        const cards = Array.from(page.querySelectorAll(".card"));
+        const search = page.querySelector(".search input");
+        const btn = document.getElementById("continueBtn");
+        const selected = new Set();
+
+        function updateButton() {
+          if (!btn) return;
+          btn.disabled = selected.size === 0;
+        }
+
+        cards.forEach((card) => {
+          card.addEventListener("click", () => {
+            cards.forEach((c) => c.classList.remove("selected"));
+            selected.clear();
+
+            card.classList.add("selected");
+            const name = card.querySelector(".name")?.textContent?.trim();
+            if (name) selected.add(name);
+
+            updateButton();
+          });
+        });
+
+        if (search) {
+          search.addEventListener("input", (e) => {
+            const q = e.target.value.toLowerCase().trim();
+            cards.forEach((c) => {
+              const name =
+                c.querySelector(".name")?.textContent.toLowerCase() || "";
+              c.style.display = name.includes(q) ? "" : "none";
+            });
+          });
+        }
+
+        if (btn) {
+          btn.addEventListener("click", () => {
+            const category = Array.from(selected)[0];
+            renderHome(category);
+            showPage("page-home");
+          });
+        }
+        updateButton();
+      })();
+
+      setHeader("Categories", false);
+    </script>
+  </body>
+</html>
