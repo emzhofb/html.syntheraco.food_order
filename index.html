@@ -597,6 +597,16 @@
         text-align: center;
         font-weight: bold;
       }
+
+      #langSelect {
+        padding: 4px 8px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: #fff;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+      }
     </style>
   </head>
   <body>
@@ -608,9 +618,29 @@
             <button id="backBtn" class="icon" aria-label="back">⟵</button>
             <div id="headerTitle" class="title">Categories</div>
             <div id="cartIcon" class="cart-icon" data-go="page-cart">
-              🛒
-              <span id="cartBadge">0</span>
+              🛒 <span id="cartBadge">0</span>
             </div>
+          </div>
+
+          <div style="
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 10px;
+            background: #e2f2f0;
+            gap: 10px;
+          ">
+            <button id="orderHistoryBtn" class="btn ghost" style="padding:6px 12px;font-size:14px;color:#000;">
+              📜 Order History
+            </button>
+            <select id="langSelect" style="padding:4px 8px;border-radius:8px;border:1px solid var(--border);background:#fff;">
+              <option value="en">English</option>
+              <option value="zh-cn">简体中文</option>
+              <option value="zh-tw">繁體中文</option>
+              <option value="th">ภาษาไทย</option>
+              <option value="id">Bahasa Indonesia</option>
+              <option value="ms">Bahasa Melayu</option>
+            </select>
           </div>
           <!-- PAGES -->
 
@@ -624,7 +654,7 @@
               <div class="grid" style="margin-bottom: 14px">
                 <div class="card">
                   <div class="thumb"></div>
-                  <div class="name">Indonesia Food</div>
+                  <div class="name">Indonesian Food</div>
                   <div class="label">23 Menu</div>
                 </div>
                 <div class="card">
@@ -987,6 +1017,14 @@
             </div>
             <div class="bottom-bar">
               <button class="btn full" data-go="page-home">Back to Home</button>
+            </div>
+          </section>
+
+          <!-- Order History -->
+          <section id="page-orders" class="page">
+            <div class="section">
+              <h2 style="margin-bottom: 16px;">📦 Order History</h2>
+              <div id="ordersList" class="list"></div>
             </div>
           </section>
         </div>
@@ -1554,6 +1592,7 @@
           "page-cart": "Cart",
           "page-checkout": "Checkout",
           "page-success": "Success",
+          "page-orders": "Order History",
         };
         setHeader(titles[id] || "Food App", id !== "page-categories");
         historyStack.push(id);
@@ -1898,6 +1937,160 @@
       })();
 
       setHeader("Categories", false);
+
+      // === Change Language Feature ===
+      const translations = {
+        "en": {
+          categories: "Categories",
+          continue: "Continue",
+          searchPlaceholder: "Search Categories Food…",
+          promo: "70% discount on all traditional drink product",
+          getNow: "Get Now",
+          option: "Option",
+          popular: "Popular Menu",
+          favorite: "Favorite Menu",
+          payment: "Payment",
+          success: "Congratulations!",
+        },
+        "id": {
+          categories: "Kategori",
+          continue: "Lanjutkan",
+          searchPlaceholder: "Cari Kategori Makanan…",
+          promo: "Diskon 70% untuk semua produk minuman tradisional",
+          getNow: "Dapatkan Sekarang",
+          option: "Pilihan",
+          popular: "Menu Populer",
+          favorite: "Menu Favorit",
+          payment: "Bayar",
+          success: "Berhasil!",
+        },
+        "zh-cn": {
+          categories: "类别",
+          continue: "继续",
+          searchPlaceholder: "搜索美食类别…",
+          promo: "所有传统饮品享受七折优惠",
+          getNow: "立即获取",
+          option: "选项",
+          popular: "热门菜单",
+          favorite: "最爱菜单",
+          payment: "支付",
+          success: "恭喜您！",
+        },
+        "zh-tw": {
+          categories: "類別",
+          continue: "繼續",
+          searchPlaceholder: "搜尋美食類別…",
+          promo: "所有傳統飲品七折優惠",
+          getNow: "立即獲取",
+          option: "選項",
+          popular: "熱門菜單",
+          favorite: "最愛菜單",
+          payment: "付款",
+          success: "恭喜您！",
+        },
+        "th": {
+          categories: "หมวดหมู่",
+          continue: "ดำเนินการต่อ",
+          searchPlaceholder: "ค้นหาหมวดหมู่อาหาร…",
+          promo: "ลด 70% สำหรับเครื่องดื่มดั้งเดิมทั้งหมด",
+          getNow: "รับเลย",
+          option: "ตัวเลือก",
+          popular: "เมนูยอดนิยม",
+          favorite: "เมนูโปรด",
+          payment: "ชำระเงิน",
+          success: "ยินดีด้วย!",
+        },
+        "ms": {
+          categories: "Kategori",
+          continue: "Teruskan",
+          searchPlaceholder: "Cari Kategori Makanan…",
+          promo: "Diskaun 70% untuk semua produk minuman tradisional",
+          getNow: "Dapatkan Sekarang",
+          option: "Pilihan",
+          popular: "Menu Popular",
+          favorite: "Menu Kegemaran",
+          payment: "Bayaran",
+          success: "Tahniah!",
+        }
+      };
+
+      function changeLanguage(lang) {
+        const t = translations[lang] || translations["en"];
+        $("#headerTitle").textContent = t.categories;
+        $("#continueBtn").textContent = t.continue;
+        $("#page-categories .search input").placeholder = t.searchPlaceholder;
+        $(".promo-text").textContent = t.promo;
+        $(".promo-btn").textContent = t.getNow;
+        $(".option-title").textContent = t.option;
+        $("#payBtn").textContent = t.payment;
+        $("#page-success h2").textContent = t.success;
+      }
+
+      document.getElementById("langSelect").addEventListener("change", (e) => {
+        changeLanguage(e.target.value);
+      });
+
+      // default bahasa: English
+      changeLanguage("en");
+
+      // === MOCK ORDER HISTORY ===
+      const orderHistory = [
+        {
+          id: "ORD-20250930-001",
+          date: "2025-09-30",
+          items: 3,
+          total: 54,
+          status: "Delivered",
+        },
+        {
+          id: "ORD-20250925-004",
+          date: "2025-09-25",
+          items: 2,
+          total: 32,
+          status: "On the Way",
+        },
+        {
+          id: "ORD-20250918-007",
+          date: "2025-09-18",
+          items: 4,
+          total: 78,
+          status: "Canceled",
+        },
+      ];
+
+      function renderOrders() {
+        const list = document.getElementById("ordersList");
+        list.innerHTML = "";
+
+        if (orderHistory.length === 0) {
+          list.innerHTML = "<p class='label'>No orders found.</p>";
+          return;
+        }
+
+        orderHistory.forEach(order => {
+          const card = document.createElement("div");
+          card.className = "card";
+          card.style.padding = "16px";
+          card.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div style="font-weight:bold;">${order.id}</div>
+              <div style="font-size:13px;color:#777;">${order.date}</div>
+            </div>
+            <div style="margin:6px 0;color:#555;font-size:14px;">
+              ${order.items} items • $${order.total}
+            </div>
+            <div style="font-weight:bold;color:${order.status === "Delivered" ? "#35b476" : order.status === "On the Way" ? "#ffb74d" : "#ff5a5f"};">
+              ${order.status}
+            </div>
+          `;
+          list.appendChild(card);
+        });
+      }
+
+      document.getElementById("orderHistoryBtn").addEventListener("click", () => {
+        renderOrders();
+        showPage("page-orders");
+      });
     </script>
   </body>
 </html>
