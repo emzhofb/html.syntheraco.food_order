@@ -765,7 +765,7 @@
             </div>
 
             <div style="display: flex; flex-direction: column; gap: 12px;">
-              <input type="email" placeholder="Email" style="padding: 12px; border-radius: 12px; border: 1px solid var(--border); font-size: 15px;" />
+              <input type="username" placeholder="Username" style="padding: 12px; border-radius: 12px; border: 1px solid var(--border); font-size: 15px;" />
               <input type="password" placeholder="Password" style="padding: 12px; border-radius: 12px; border: 1px solid var(--border); font-size: 15px;" />
               <button id="loginSubmit" class="btn full" style="margin-top: 8px;">Login</button>
               <button id="showRegister" class="btn ghost full">Create New Account</button>
@@ -837,11 +837,6 @@
               <div class="label">7 Menu</div>
             </div>
           </div>
-        </div>
-        <div class="bottom-bar">
-          <button id="continueBtn" class="btn full" disabled>
-            Continue
-          </button>
         </div>
       </section>
 
@@ -1147,6 +1142,9 @@
   </div>
 
   <script>
+    const ROOT_URL = "https://ecomdemo.syntheraco.com/dapi";
+    const _lang = "en";
+    
     // KATALOG per kategori (lengkap, contoh)
     const catalogByCategory = {
       "Indonesian Food": {
@@ -2004,13 +2002,7 @@
       if (!page) return;
       const cards = Array.from(page.querySelectorAll(".card"));
       const search = page.querySelector(".search input");
-      const btn = document.getElementById("continueBtn");
       const selected = new Set();
-
-      function updateButton() {
-        if (!btn) return;
-        btn.disabled = selected.size === 0;
-      }
 
       cards.forEach((card) => {
         card.addEventListener("click", () => {
@@ -2019,9 +2011,11 @@
 
           card.classList.add("selected");
           const name = card.querySelector(".name")?.textContent?.trim();
-          if (name) selected.add(name);
-
-          updateButton();
+          if (name) {
+          selected.add(name);
+          renderHome(name);
+          showPage("page-home");
+        }
         });
       });
 
@@ -2035,15 +2029,6 @@
           });
         });
       }
-
-      if (btn) {
-        btn.addEventListener("click", () => {
-          const category = Array.from(selected)[0];
-          renderHome(category);
-          showPage("page-home");
-        });
-      }
-      updateButton();
     })();
 
     setHeader("Categories", false);
@@ -2127,7 +2112,6 @@
     function changeLanguage(lang) {
       const t = translations[lang] || translations["en"];
       $("#headerTitle").textContent = t.categories;
-      $("#continueBtn").textContent = t.continue;
       $("#page-categories .search input").placeholder = t.searchPlaceholder;
       $(".promo-text").textContent = t.promo;
       $(".promo-btn").textContent = t.getNow;
@@ -2247,10 +2231,111 @@
     });
 
     // Dummy aksi submit register
-    document.getElementById("registerSubmit").addEventListener("click", () => {
-      alert("✅ Register success! (nanti bisa dihubungkan ke backend)");
-      registerForm.style.display = "none";
-      loginForm.style.display = "block";
+    document.getElementById("registerSubmit").addEventListener("click", async () => {
+      const name = document.querySelector('#registerForm input[placeholder="Full Name"]').value;
+      const email = document.querySelector('#registerForm input[placeholder="Email"]').value;
+      const password = document.querySelector('#registerForm input[placeholder="Password"]').value;
+      const confirmPassword = document.querySelector('#registerForm input[placeholder="Confirm Password"]').value;
+
+      if (password !== confirmPassword) {
+        alert("❌ Password tidak cocok!");
+        return;
+      }
+
+      try {
+        const res = await fetch("http://localhost:3000/auth/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, email, password }),
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          alert("✅ Register berhasil!");
+          registerForm.style.display = "none";
+          loginForm.style.display = "block";
+        } else {
+          alert("❌ Gagal register: " + (data.error || "Unknown error"));
+        }
+      } catch (err) {
+        alert("🚨 Error koneksi ke server!");
+      }
+    });
+
+    document.getElementById("loginSubmit").addEventListener("click", async () => {
+      const username = document.querySelector('#loginForm input[placeholder="Username"]').value;
+      const password = document.querySelector('#loginForm input[placeholder="Password"]').value;
+      
+      const params = new URLSearchParams({
+        ao: 1,
+        app: 1,
+        api_key: "9419919608a0bbe08786a97276d415c2",
+        username: username,
+        password: password,
+        op: "login"
+      });
+
+      try {
+        const res = await fetch(`${ROOT_URL}/open_api/?lang=${_lang}&${params.toString()}`, {
+          method: "GET",
+          headers: { "Accept": "application/json" }
+        });
+
+        const data = await res.json();
+
+        if (data.status === 1) {
+          const member_info = data.member_info;
+          localStorage.setItem("member_id", member_info['id']);
+          localStorage.setItem("session_mid", member_info['id']);
+          localStorage.setItem("session_member_login_key", member_info['session_member_login_key']);
+          localStorage.setItem("cookie_session_id", member_info['cookie_session_id']);
+          localStorage.setItem("username", member_info['username']);
+          localStorage.setItem("full_name", member_info['name']);
+          _login_data_str = '&ao=1&session_mid=' + member_info['username'] + '&session_member_login_key=' + member_info['session_member_login_key'] + '&cookie_session_id=' + member_info['cookie_session_id'];
+          _notification = member_info.enable_push_notification;
+          localStorage.setItem("login_data_str", _login_data_str);
+
+          // ✅ Ubah tombol jadi Logout
+          const loginBtn = document.getElementById("loginBtn");
+          loginBtn.textContent = "🚪 Logout";
+
+          // Tutup modal login
+          loginModal.style.display = "none";
+
+          // ✅ Tambahkan event klik untuk logout
+          loginBtn.onclick = () => {
+            localStorage.clear();
+            loginBtn.textContent = "👤 Login/Register";
+            alert("✅ You was logged out.");
+          };
+        } else {
+          alert("❌ Failed login: " + (data.error || "Invalid credentials"));
+        }
+      } catch (err) {
+        alert("🚨 Server Error!");
+      }
+    });
+
+    // ✅ Cek status login saat halaman pertama dimuat
+    window.addEventListener("DOMContentLoaded", () => {
+      const loginBtn = document.getElementById("loginBtn");
+
+      if (localStorage.getItem("member_id")) {
+        // Kalau ada data login di localStorage → tampilkan tombol Logout
+        loginBtn.textContent = "🚪 Logout";
+        loginBtn.onclick = () => {
+          localStorage.clear();
+          loginBtn.textContent = "👤 Login/Register";
+          alert("✅ You was logged out.");
+        };
+      } else {
+        // Kalau belum login → tampilkan tombol Login/Register
+        loginBtn.textContent = "👤 Login/Register";
+        loginBtn.onclick = () => {
+          menuPopup.style.display = "none";
+          loginModal.style.display = "flex";
+        };
+      }
     });
   </script>
 </body>
