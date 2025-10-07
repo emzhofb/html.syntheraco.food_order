@@ -477,47 +477,6 @@
       opacity: 0.5;
     }
 
-    /* Promo Card */
-    .promo-card {
-      display: flex;
-      background: #fff;
-      border-radius: 16px;
-      padding: 16px;
-      gap: 16px;
-      margin-bottom: 16px;
-      align-items: center;
-    }
-
-    .promo-img {
-      width: 80px;
-      height: 80px;
-      border-radius: 12px;
-      background: #ddd;
-    }
-
-    .promo-content {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
-
-    .promo-text {
-      font-size: 16px;
-      font-weight: 500;
-      margin-bottom: 8px;
-    }
-
-    .promo-btn {
-      background: #27ae90;
-      color: #fff;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 999px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
     /* Option Filter */
     .option-section {
       margin-bottom: 12px;
@@ -805,38 +764,7 @@
             <input placeholder="Search Categories Food…" />
             <span class="icon">🔍</span>
           </div>
-          <div class="grid" style="margin-bottom: 14px">
-            <div class="card">
-              <div class="thumb"></div>
-              <div class="name">Indonesian Food</div>
-              <div class="label">23 Menu</div>
-            </div>
-            <div class="card">
-              <div class="thumb"></div>
-              <div class="name">Korean Food</div>
-              <div class="label">7 Menu</div>
-            </div>
-            <div class="card">
-              <div class="thumb"></div>
-              <div class="name">Italian Food</div>
-              <div class="label">8 Menu</div>
-            </div>
-            <div class="card">
-              <div class="thumb"></div>
-              <div class="name">Japan Food</div>
-              <div class="label">6 Menu</div>
-            </div>
-            <div class="card">
-              <div class="thumb"></div>
-              <div class="name">Indian Food</div>
-              <div class="label">9 Menu</div>
-            </div>
-            <div class="card">
-              <div class="thumb"></div>
-              <div class="name">France Food</div>
-              <div class="label">7 Menu</div>
-            </div>
-          </div>
+          <div class="grid" id="categoryGrid" style="margin-bottom: 14px"></div>
         </div>
       </section>
 
@@ -844,33 +772,14 @@
       <section id="page-home" class="page">
         <!-- Promo Card -->
         <div class="promo-card">
-          <div class="promo-img"></div>
           <div class="promo-content">
-            <div class="promo-text">
-              70% discount on all traditional drink product
-            </div>
-            <button class="promo-btn">Get Now</button>
+            <div class="promo-text"></div>
           </div>
         </div>
 
         <div class="section">
-          <!-- Option Filter -->
-          <div class="option-section">
-            <div class="option-title">Option</div>
-            <div class="filter-chips">
-              <div class="filter-chip active">All</div>
-              <div class="filter-chip">Traditional Drink</div>
-              <div class="filter-chip">Traditional Food</div>
-              <div class="filter-chip">Traditional Snack</div>
-            </div>
-          </div>
-          <hr />
-
-          <div class="label" style="margin: 10px 0 6px">Popular Menu</div>
+          <div class="label" style="margin: 10px 0 6px">Menu</div>
           <div class="list" id="homePopular"></div>
-
-          <div class="label" style="margin: 16px 0 6px">Favorite Menu</div>
-          <div class="list" id="homeFav"></div>
         </div>
       </section>
 
@@ -1143,515 +1052,8 @@
 
   <script>
     const ROOT_URL = "https://ecomdemo.syntheraco.com/dapi";
+    const API_KEY = "9419919608a0bbe08786a97276d415c2";
     const _lang = "en";
-    
-    // KATALOG per kategori (lengkap, contoh)
-    const catalogByCategory = {
-      "Indonesian Food": {
-        popular: [
-          {
-            id: "gudeg",
-            name: "Gudeg Assiap",
-            price: 20,
-            desc: "Gudeg Assisi is the result of the latest innovation in the culinary world which combines classic flavors with a modern nuance. Taking inspiration from gudeg a typical Yogyakarta dish that is rich in spices and deep deliciousness.",
-            location: "Kemang, ngalor sitik tekan",
-            reviewer: 350,
-            variant: [
-              { name: "Gudeg Jumbo", extraPrice: 5 },
-              { name: "Gudeg Regular", extraPrice: 0 },
-              { name: "Gudeg Mini", extraPrice: -2 },
-            ],
-          },
-          {
-            id: "sate",
-            name: "Sate Ayam Madura",
-            price: 18,
-            desc: "Grilled chicken skewers with peanut sauce.",
-            location: "Sigude, ngetan sitik tekan",
-            reviewer: 200,
-            variant: [
-              { name: "Sate 15 pcs", extraPrice: 5 },
-              { name: "Sate 10 pcs", extraPrice: 0 },
-              { name: "Sate 5 pcs", extraPrice: -2 },
-            ],
-          },
-          {
-            id: "rendang",
-            name: "Rendang Padang",
-            price: 24,
-            desc: "Slow-cooked beef in rich coconut spice.",
-            location: "Kemang, ngalor sitik tekan",
-            reviewer: 150,
-            variant: [
-              { name: "Rendang Jumbo", extraPrice: 5 },
-              { name: "Rendang Regular", extraPrice: 0 },
-              { name: "Rendang Mini", extraPrice: -2 },
-            ],
-          },
-        ],
-        favorite: [
-          {
-            id: "bakso",
-            name: "Bakso Malang",
-            price: 19,
-            desc: "Beef meatball soup with tofu and pangsit.",
-            location: "Leyang, anjasmara",
-            reviewer: 150,
-            variant: [
-              { name: "Bakso Jumbo", extraPrice: 5 },
-              { name: "Bakso Regular", extraPrice: 0 },
-              { name: "Bakso Mini", extraPrice: -2 },
-            ],
-          },
-          {
-            id: "dawet",
-            name: "Es Dawet Ayu",
-            price: 10,
-            desc: "Iced cendol with palm sugar and coconut milk.",
-            location: "Kelang, samping gang",
-            reviewer: 250,
-            variant: [
-              { name: "Dawet Jumbo", extraPrice: 5 },
-              { name: "Dawet Regular", extraPrice: 0 },
-              { name: "Dawet Mini", extraPrice: -2 },
-            ],
-          },
-          {
-            id: "klepon",
-            name: "Klepon",
-            price: 12,
-            desc: "Sticky rice balls filled with palm sugar.",
-            location: "Jogja, sitik tekan",
-            reviewer: 450,
-            variant: [
-              { name: "Klepon Jumbo", extraPrice: 5 },
-              { name: "Klepon Regular", extraPrice: 0 },
-              { name: "Klepon Mini", extraPrice: -2 },
-            ],
-          },
-        ],
-      },
-      "Korean Food": {
-        popular: [
-          {
-            id: "bibimbap",
-            name: "Bibimbap",
-            price: 22,
-            desc: "Mixed rice with veggies, beef, and gochujang.",
-            location: "Kemang, ngalor sitik tekan",
-            reviewer: 350,
-            variant: [
-              { name: "Jumbo", extraPrice: 5 },
-              { name: "Regular", extraPrice: 0 },
-              { name: "Mini", extraPrice: -2 },
-            ],
-          },
-          {
-            id: "bulgogi",
-            name: "Bulgogi",
-            price: 23,
-            desc: "Marinated grilled beef.",
-            location: "Kemang, ngalor sitik tekan",
-            reviewer: 350,
-            variant: [
-              { name: "Jumbo", extraPrice: 5 },
-              { name: "Regular", extraPrice: 0 },
-              { name: "Mini", extraPrice: -2 },
-            ],
-          },
-          {
-            id: "kimchi-jjigae",
-            name: "Kimchi Jjigae",
-            price: 18,
-            desc: "Spicy kimchi stew.",
-            location: "Kemang, ngalor sitik tekan",
-            reviewer: 350,
-            variant: [
-              { name: "Jumbo", extraPrice: 5 },
-              { name: "Regular", extraPrice: 0 },
-              { name: "Mini", extraPrice: -2 },
-            ],
-          },
-        ],
-        favorite: [
-          {
-            id: "tteok",
-            name: "Tteokbokki",
-            price: 16,
-            desc: "Chewy spicy rice cakes.",
-            location: "Kemang, ngalor sitik tekan",
-            reviewer: 350,
-            variant: [
-              { name: "Jumbo", extraPrice: 5 },
-              { name: "Regular", extraPrice: 0 },
-              { name: "Mini", extraPrice: -2 },
-            ],
-          },
-          {
-            id: "kfc",
-            name: "Korean Fried Chicken",
-            price: 20,
-            desc: "Crispy double-fried, sweet-spicy glaze.",
-            location: "Kemang, ngalor sitik tekan",
-            reviewer: 350,
-            variant: [
-              { name: "Jumbo", extraPrice: 5 },
-              { name: "Regular", extraPrice: 0 },
-              { name: "Mini", extraPrice: -2 },
-            ],
-          },
-          {
-            id: "ramyeon",
-            name: "Ramyeon",
-            price: 14,
-            desc: "Comfort noodle soup Korean-style.",
-            location: "Kemang, ngalor sitik tekan",
-            reviewer: 350,
-            variant: [
-              { name: "Jumbo", extraPrice: 5 },
-              { name: "Regular", extraPrice: 0 },
-              { name: "Mini", extraPrice: -2 },
-            ],
-          },
-        ],
-      },
-      "Italian Food": {
-        popular: [
-          {
-            id: "carbonara",
-            name: "Pasta Carbonara",
-            price: 21,
-            desc: "Egg, pecorino, guanciale, black pepper.",
-            location: "Kemang, ngalor sitik tekan",
-            reviewer: 350,
-            variant: [
-              { name: "Jumbo", extraPrice: 5 },
-              { name: "Regular", extraPrice: 0 },
-              { name: "Mini", extraPrice: -2 },
-            ],
-          },
-          {
-            id: "margherita",
-            name: "Pizza Margherita",
-            price: 20,
-            desc: "Tomato, mozzarella, basil.",
-            location: "Kemang, ngalor sitik tekan",
-            reviewer: 350,
-            variant: [
-              { name: "Jumbo", extraPrice: 5 },
-              { name: "Regular", extraPrice: 0 },
-              { name: "Mini", extraPrice: -2 },
-            ],
-          },
-          {
-            id: "lasagna",
-            name: "Lasagna",
-            price: 24,
-            desc: "Layered pasta with ragù and béchamel.",
-            location: "Kemang, ngalor sitik tekan",
-            reviewer: 350,
-            variant: [
-              { name: "Jumbo", extraPrice: 5 },
-              { name: "Regular", extraPrice: 0 },
-              { name: "Mini", extraPrice: -2 },
-            ],
-          },
-        ],
-        favorite: [
-          {
-            id: "risotto",
-            name: "Risotto Funghi",
-            price: 23,
-            desc: "Creamy mushroom risotto.",
-            location: "Kemang, ngalor sitik tekan",
-            reviewer: 350,
-            variant: [
-              { name: "Jumbo", extraPrice: 5 },
-              { name: "Regular", extraPrice: 0 },
-              { name: "Mini", extraPrice: -2 },
-            ],
-          },
-          {
-            id: "pesto",
-            name: "Pasta al Pesto",
-            price: 19,
-            desc: "Basil pesto, pine nuts, parmesan.",
-            location: "Kemang, ngalor sitik tekan",
-            reviewer: 350,
-            variant: [
-              { name: "Jumbo", extraPrice: 5 },
-              { name: "Regular", extraPrice: 0 },
-              { name: "Mini", extraPrice: -2 },
-            ],
-          },
-          {
-            id: "tiramisu",
-            name: "Tiramisu",
-            price: 12,
-            desc: "Coffee-soaked ladyfingers, mascarpone.",
-            location: "Kemang, ngalor sitik tekan",
-            reviewer: 350,
-            variant: [
-              { name: "Jumbo", extraPrice: 5 },
-              { name: "Regular", extraPrice: 0 },
-              { name: "Mini", extraPrice: -2 },
-            ],
-          },
-        ],
-      },
-      "Japan Food": {
-        popular: [
-          {
-            id: "ramen-shoyu",
-            name: "Ramen Shoyu",
-            price: 19,
-            desc: "Soy-sauce broth ramen.",
-            location: "Kemang, ngalor sitik tekan",
-            reviewer: 350,
-            variant: [
-              { name: "Jumbo", extraPrice: 5 },
-              { name: "Regular", extraPrice: 0 },
-              { name: "Mini", extraPrice: -2 },
-            ],
-          },
-          {
-            id: "gyudon",
-            name: "Gyudon",
-            price: 18,
-            desc: "Beef bowl with onions.",
-            location: "Kemang, ngalor sitik tekan",
-            reviewer: 350,
-            variant: [
-              { name: "Jumbo", extraPrice: 5 },
-              { name: "Regular", extraPrice: 0 },
-              { name: "Mini", extraPrice: -2 },
-            ],
-          },
-          {
-            id: "katsu",
-            name: "Chicken Katsu",
-            price: 17,
-            desc: "Panko-fried chicken cutlet.",
-            location: "Kemang, ngalor sitik tekan",
-            reviewer: 350,
-            variant: [
-              { name: "Jumbo", extraPrice: 5 },
-              { name: "Regular", extraPrice: 0 },
-              { name: "Mini", extraPrice: -2 },
-            ],
-          },
-        ],
-        favorite: [
-          {
-            id: "sushi",
-            name: "Sushi Mix",
-            price: 26,
-            desc: "Assorted nigiri & maki.",
-            location: "Kemang, ngalor sitik tekan",
-            reviewer: 350,
-            variant: [
-              { name: "Jumbo", extraPrice: 5 },
-              { name: "Regular", extraPrice: 0 },
-              { name: "Mini", extraPrice: -2 },
-            ],
-          },
-          {
-            id: "takoyaki",
-            name: "Takoyaki",
-            price: 14,
-            desc: "Octopus balls, bonito flakes.",
-            location: "Kemang, ngalor sitik tekan",
-            reviewer: 350,
-            variant: [
-              { name: "Jumbo", extraPrice: 5 },
-              { name: "Regular", extraPrice: 0 },
-              { name: "Mini", extraPrice: -2 },
-            ],
-          },
-          {
-            id: "okonomiyaki",
-            name: "Okonomiyaki",
-            price: 18,
-            desc: "Savory cabbage pancake.",
-            location: "Kemang, ngalor sitik tekan",
-            reviewer: 350,
-            variant: [
-              { name: "Jumbo", extraPrice: 5 },
-              { name: "Regular", extraPrice: 0 },
-              { name: "Mini", extraPrice: -2 },
-            ],
-          },
-        ],
-      },
-      "Indian Food": {
-        popular: [
-          {
-            id: "butter-chicken",
-            name: "Butter Chicken",
-            price: 21,
-            desc: "Creamy tomato-butter gravy.",
-            location: "Kemang, ngalor sitik tekan",
-            reviewer: 350,
-            variant: [
-              { name: "Jumbo", extraPrice: 5 },
-              { name: "Regular", extraPrice: 0 },
-              { name: "Mini", extraPrice: -2 },
-            ],
-          },
-          {
-            id: "biryani",
-            name: "Chicken Biryani",
-            price: 22,
-            desc: "Fragrant spiced rice.",
-            location: "Kemang, ngalor sitik tekan",
-            reviewer: 350,
-            variant: [
-              { name: "Jumbo", extraPrice: 5 },
-              { name: "Regular", extraPrice: 0 },
-              { name: "Mini", extraPrice: -2 },
-            ],
-          },
-          {
-            id: "paneer-tikka",
-            name: "Paneer Tikka",
-            price: 19,
-            desc: "Grilled cottage cheese with spices.",
-            location: "Kemang, ngalor sitik tekan",
-            reviewer: 350,
-            variant: [
-              { name: "Jumbo", extraPrice: 5 },
-              { name: "Regular", extraPrice: 0 },
-              { name: "Mini", extraPrice: -2 },
-            ],
-          },
-        ],
-        favorite: [
-          {
-            id: "masala-dosa",
-            name: "Masala Dosa",
-            price: 16,
-            desc: "Crispy crepe with spiced potato.",
-            location: "Kemang, ngalor sitik tekan",
-            reviewer: 350,
-            variant: [
-              { name: "Jumbo", extraPrice: 5 },
-              { name: "Regular", extraPrice: 0 },
-              { name: "Mini", extraPrice: -2 },
-            ],
-          },
-          {
-            id: "chana-masala",
-            name: "Chana Masala",
-            price: 17,
-            desc: "Chickpeas in tangy gravy.",
-            location: "Kemang, ngalor sitik tekan",
-            reviewer: 350,
-            variant: [
-              { name: "Jumbo", extraPrice: 5 },
-              { name: "Regular", extraPrice: 0 },
-              { name: "Mini", extraPrice: -2 },
-            ],
-          },
-          {
-            id: "naan",
-            name: "Garlic Naan",
-            price: 8,
-            desc: "Leavened flatbread, garlic & butter.",
-            location: "Kemang, ngalor sitik tekan",
-            reviewer: 350,
-            variant: [
-              { name: "Jumbo", extraPrice: 5 },
-              { name: "Regular", extraPrice: 0 },
-              { name: "Mini", extraPrice: -2 },
-            ],
-          },
-        ],
-      },
-      "France Food": {
-        popular: [
-          {
-            id: "quiche",
-            name: "Quiche Lorraine",
-            price: 23,
-            desc: "Savory custard tart with bacon.",
-            location: "Kemang, ngalor sitik tekan",
-            reviewer: 350,
-            variant: [
-              { name: "Jumbo", extraPrice: 5 },
-              { name: "Regular", extraPrice: 0 },
-              { name: "Mini", extraPrice: -2 },
-            ],
-          },
-          {
-            id: "ratatouille",
-            name: "Ratatouille",
-            price: 19,
-            desc: "Provencal stewed vegetables.",
-            location: "Kemang, ngalor sitik tekan",
-            reviewer: 350,
-            variant: [
-              { name: "Jumbo", extraPrice: 5 },
-              { name: "Regular", extraPrice: 0 },
-              { name: "Mini", extraPrice: -2 },
-            ],
-          },
-          {
-            id: "coq-au-vin",
-            name: "Coq au Vin",
-            price: 26,
-            desc: "Chicken braised in red wine.",
-            location: "Kemang, ngalor sitik tekan",
-            reviewer: 350,
-            variant: [
-              { name: "Jumbo", extraPrice: 5 },
-              { name: "Regular", extraPrice: 0 },
-              { name: "Mini", extraPrice: -2 },
-            ],
-          },
-        ],
-        favorite: [
-          {
-            id: "bouillabaisse",
-            name: "Bouillabaisse",
-            price: 28,
-            desc: "Marseille fish stew.",
-            location: "Kemang, ngalor sitik tekan",
-            reviewer: 350,
-            variant: [
-              { name: "Jumbo", extraPrice: 5 },
-              { name: "Regular", extraPrice: 0 },
-              { name: "Mini", extraPrice: -2 },
-            ],
-          },
-          {
-            id: "creme-brulee",
-            name: "Crème Brûlée",
-            price: 12,
-            desc: "Caramelized custard dessert.",
-            location: "Kemang, ngalor sitik tekan",
-            reviewer: 350,
-            variant: [
-              { name: "Jumbo", extraPrice: 5 },
-              { name: "Regular", extraPrice: 0 },
-              { name: "Mini", extraPrice: -2 },
-            ],
-          },
-          {
-            id: "croque",
-            name: "Croque Monsieur",
-            price: 15,
-            desc: "Griddled ham & cheese sandwich.",
-            location: "Kemang, ngalor sitik tekan",
-            reviewer: 350,
-            variant: [
-              { name: "Jumbo", extraPrice: 5 },
-              { name: "Regular", extraPrice: 0 },
-              { name: "Mini", extraPrice: -2 },
-            ],
-          },
-        ],
-      },
-    };
 
     // --- Mock data ---
     const products = [
@@ -1709,54 +1111,6 @@
       };
       setHeader(titles[id] || "Food App", id !== "page-categories");
       historyStack.push(id);
-    }
-
-    // Ganti renderHome agar ambil dari catalogByCategory
-    function renderHome(selectedCategory) {
-      const targetA = $("#homePopular");
-      const targetB = $("#homeFav");
-      targetA.innerHTML = "";
-      targetB.innerHTML = "";
-
-      if (!selectedCategory || !catalogByCategory[selectedCategory]) return;
-
-      const { popular, favorite } = catalogByCategory[selectedCategory];
-
-      popular.forEach((p) => {
-        const el = document.createElement("div");
-        el.className = "row";
-        el.innerHTML = `
-          <div class="pic"></div>
-          <div class="meta">
-            <div class="name">${p.name}</div>
-            <div class="label"><span class="icon-location">📍</span> ${p.location || "Unknown location"
-          }</div>
-            <div class="label"><span class="icon-star">⭐</span> (${p.reviewer || 0
-          } reviewer)</div>
-          </div>
-          <div class="price">$${p.price}</div>
-        `;
-        el.addEventListener("click", () => openDetail(p));
-        targetA.appendChild(el);
-      });
-
-      favorite.forEach((p) => {
-        const el = document.createElement("div");
-        el.className = "row";
-        el.innerHTML = `
-          <div class="pic"></div>
-          <div class="meta">
-            <div class="name">${p.name}</div>
-            <div class="label"><span class="icon-location">📍</span> ${p.location || "Unknown location"
-          }</div>
-            <div class="label"><span class="icon-star">⭐</span> (${p.reviewer || 0
-          } reviewer)</div>
-          </div>
-          <div class="price">$${p.price}</div>
-        `;
-        el.addEventListener("click", () => openDetail(p));
-        targetB.appendChild(el);
-      });
     }
 
     document.querySelectorAll(".payment-card").forEach(card => {
@@ -1993,7 +1347,6 @@
     });
 
     // init
-    renderHome();
     renderCart();
 
     // Categories selection logic
@@ -2013,7 +1366,6 @@
           const name = card.querySelector(".name")?.textContent?.trim();
           if (name) {
           selected.add(name);
-          renderHome(name);
           showPage("page-home");
         }
         });
@@ -2113,8 +1465,6 @@
       const t = translations[lang] || translations["en"];
       $("#headerTitle").textContent = t.categories;
       $("#page-categories .search input").placeholder = t.searchPlaceholder;
-      $(".promo-text").textContent = t.promo;
-      $(".promo-btn").textContent = t.getNow;
       $(".option-title").textContent = t.option;
       $("#payBtn").textContent = t.payment;
       $("#page-success h2").textContent = t.success;
@@ -2269,7 +1619,7 @@
       const params = new URLSearchParams({
         ao: 1,
         app: 1,
-        api_key: "9419919608a0bbe08786a97276d415c2",
+        api_key: API_KEY,
         username: username,
         password: password,
         op: "login"
@@ -2336,7 +1686,140 @@
           loginModal.style.display = "flex";
         };
       }
+
+      get_template_data();
     });
+
+    async function get_template_data() {
+      const params = new URLSearchParams({
+        ao: 1,
+        api_key: API_KEY,
+        op: "get_template_data"
+      });
+
+      try {
+        const res = await fetch(`${ROOT_URL}/open_api/?lang=${_lang}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: params,
+        });
+
+        const data = await res.json();
+
+        if (data.status === 1) {
+          build_category_menu(data.product_categories.category_tree);
+        } else {
+          alert("❌ API Error:", data.msg);
+        }
+      } catch (err) {
+        console.log('err', err);
+        alert("🚨 Server Error!", err);
+      }
+    }
+
+    function build_category_menu(category_tree) {
+      const grid = document.getElementById("categoryGrid");
+      grid.innerHTML = "";
+
+      if (!category_tree || Object.keys(category_tree).length === 0) {
+        grid.innerHTML = "<p class='label'>No categories available</p>";
+        return;
+      }
+
+      // 🔁 Loop kategori utama
+      Object.values(category_tree).forEach(parent => {
+        const parentCard = document.createElement("div");
+        parentCard.className = "card";
+        parentCard.innerHTML = `
+          <div class="thumb"></div>
+          <div class="name">${parent.category}</div>
+          <div class="label">Main Category</div>
+        `;
+        parentCard.addEventListener("click", () => {
+          _scids = [parent.id];
+          _pg = 1;
+          get_product_listing();
+          showPage("page-home");
+        });
+        grid.appendChild(parentCard);
+
+        if (parent.sub_cat && Object.keys(parent.sub_cat).length > 0) {
+          Object.values(parent.sub_cat).forEach(sub => {
+            const subCard = document.createElement("div");
+            subCard.className = "card";
+            subCard.style.marginLeft = "8px";
+            subCard.innerHTML = `
+              <div class="thumb"></div>
+              <div class="name">${sub.category}</div>
+              <div class="label">Sub Category</div>
+            `;
+            subCard.addEventListener("click", () => {
+              _scids = [sub.id];
+              _pg = 1;
+              get_product_listing();
+              showPage("page-home");
+            });
+            grid.appendChild(subCard);
+          });
+        }
+      });
+    }
+    
+    let _scids = [];
+    let _pg = 1;
+    let _smcid = '';
+    let _shash = [];
+    let _sortby = '';
+    let _spricerange = '';
+    let _skeyword = '';
+    let _promolist = '';
+
+    async function get_product_listing() {
+      try {
+        const res = await fetch(`${ROOT_URL}/open_api/?lang=${_lang}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({
+            ao: 1,
+            op: "get_product_list",
+            api_key: API_KEY,
+            pg: _pg,
+            smcid: _smcid,
+            "scids[]": _scids,
+            "shash[]": _shash,
+            sortby: _sortby,
+            spricerange: _spricerange,
+            skeyword: _skeyword,
+            promolist: _promolist,
+          })
+        });
+
+        const data = await res.json();
+        const target = document.getElementById("homePopular");
+        target.innerHTML = "";
+
+        if (data.status === 1 && data.data && Object.keys(data.data).length > 0) {
+          Object.values(data.data).forEach(prod => {
+            const card = document.createElement("div");
+            card.className = "row";
+            card.innerHTML = `
+              <div class="pic" style="background-image:url(${prod.product_images?.[0]?.image_name_url || ''})"></div>
+              <div class="meta">
+                <div class="name">${prod['title_' + _lang]}</div>
+                <div class="label">RM ${prod.product_prices}</div>
+              </div>
+            `;
+            card.addEventListener("click", () => openDetail(prod));
+            target.appendChild(card);
+          });
+        } else {
+          target.innerHTML = "<p class='label'>No products found.</p>";
+        }
+      } catch (err) {
+        console.error(err);
+        alert("🚨 Failed to load product list");
+      }
+    }
   </script>
 </body>
 
