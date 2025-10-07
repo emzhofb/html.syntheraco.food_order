@@ -478,10 +478,6 @@
     }
 
     /* Option Filter */
-    .option-section {
-      margin-bottom: 12px;
-    }
-
     .option-title {
       font-weight: 700;
       font-size: 16px;
@@ -813,9 +809,8 @@
                     gap: 4px;
                     color: #888;
                   ">
-              📍 Nganu, Pinggir kali cacaban...
             </div>
-            <div style="color: teal; font-size: 18px">♡</div>
+            <div style="color: teal; font-size: 18px"></div>
           </div>
 
           <!-- Hero / Gambar -->
@@ -835,21 +830,14 @@
                   color: #888;
                 ">
             <div style="display: flex; align-items: center; gap: 4px">
-              ⭐ 4,9
             </div>
             <div style="display: flex; align-items: center; gap: 4px">
-              ⏱ 45 min
             </div>
           </div>
 
           <div class="option-section">
-            <div class="option-title">Variant</div>
+            <div class="option-title"></div>
             <div class="filter-chips" id="variantGroup"></div>
-          </div>
-
-          <div class="option-section">
-            <div class="option-title">Spicy Level</div>
-            <div class="filter-chips" id="spicyGroup"></div>
           </div>
 
           <div style="
@@ -1141,72 +1129,6 @@
     // Detail
     let currentDetail = null;
     let qty = 1;
-    function openDetail(p) {
-      currentDetail = p;
-      qty = 1;
-      updateQty();
-      $("#detailName span").textContent = p.name;
-      $("#detailPrice").textContent = `$${p.price}`;
-      $("#detailDesc").textContent = p.desc;
-      $("#detailLocation").textContent =
-        "📍 " + p.location || "Unknown location";
-
-      const variantGroup = document.getElementById("variantGroup");
-      variantGroup.innerHTML = "";
-
-      if (Array.isArray(p.variant) && p.variant.length > 0) {
-        p.variant.forEach((v, i) => {
-          const chip = document.createElement("div");
-          chip.className = "filter-chip" + (i === 0 ? " active" : "");
-          chip.dataset.value = v.name;
-          chip.dataset.extra = v.extraPrice || 0;
-          const extraPrice =
-            v.extraPrice > 0 ? `(+${v.extraPrice})` : `(${v.extraPrice})`;
-          chip.textContent = `${v.name} ${v.extraPrice ? `${extraPrice}` : ""
-            }`;
-
-          chip.addEventListener("click", () => {
-            variantGroup
-              .querySelectorAll(".filter-chip")
-              .forEach((c) => c.classList.remove("active"));
-            chip.classList.add("active");
-          });
-
-          variantGroup.appendChild(chip);
-        });
-      } else {
-        variantGroup.innerHTML = "<em>No variant available</em>";
-      }
-
-      // === Render Spicy Level ===
-      const spicyGroup = document.getElementById("spicyGroup");
-      spicyGroup.innerHTML = "";
-
-      const spicyLevels = [
-        "Level 1",
-        "Level 2",
-        "Level 3",
-        "Level 4",
-        "Level 5",
-      ];
-      spicyLevels.forEach((level, i) => {
-        const chip = document.createElement("div");
-        chip.className = "filter-chip" + (i === 0 ? " active" : "");
-        chip.dataset.value = level;
-        chip.textContent = level;
-
-        chip.addEventListener("click", () => {
-          spicyGroup
-            .querySelectorAll(".filter-chip")
-            .forEach((c) => c.classList.remove("active"));
-          chip.classList.add("active");
-        });
-
-        spicyGroup.appendChild(chip);
-      });
-
-      showPage("page-detail");
-    }
     function updateQty() {
       $("#qtyNum").textContent = qty;
     }
@@ -1465,7 +1387,6 @@
       const t = translations[lang] || translations["en"];
       $("#headerTitle").textContent = t.categories;
       $("#page-categories .search input").placeholder = t.searchPlaceholder;
-      $(".option-title").textContent = t.option;
       $("#payBtn").textContent = t.payment;
       $("#page-success h2").textContent = t.success;
     }
@@ -1809,7 +1730,7 @@
                 <div class="label">RM ${prod.product_prices}</div>
               </div>
             `;
-            card.addEventListener("click", () => openDetail(prod));
+            card.addEventListener("click", () => get_product_info(prod.id));
             target.appendChild(card);
           });
         } else {
@@ -1818,6 +1739,104 @@
       } catch (err) {
         console.error(err);
         alert("🚨 Failed to load product list");
+      }
+    }
+
+    async function get_product_info(pid) {
+      try {
+        const res = await fetch(`${ROOT_URL}/open_api/?lang=${_lang}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({
+            ao: 1,
+            op: "get_product_by_id",
+            api_key: API_KEY,
+            pid: pid
+          }),
+        });
+
+        const data = await res.json();
+        if (data.status === 1 && data.data) {
+          const prod = data.data;
+
+          // 🧠 Isi field detail
+          $("#detailName span").textContent = prod['title_' + _lang];
+          $("#detailPrice").textContent = `RM ${prod.product_prices}`;
+          $("#detailDesc").textContent = prod['description_' + _lang] || "-";
+
+          const hero = document.querySelector(".hero");
+          hero.style.backgroundImage = `url(${prod.product_images?.[0]?.image_name_url || ''})`;
+          hero.style.backgroundSize = "cover";
+          hero.style.backgroundPosition = "center";
+
+          // 🧪 Render opsi / varian
+          const variantContainer = document.getElementById("variantGroup");
+          variantContainer.innerHTML = "";
+          let selectedVariants = {};
+
+          // 🔍 Ambil dari level ROOT, bukan dari prod
+          const variantNames = data.variant_names;
+          const variantValues = data.variant_values;
+          const variantList = data.variant_list;
+          const variantsString = prod.variants;
+
+          if (variantNames && variantValues && variantList) {
+            Object.entries(variantNames).forEach(([variantId, variantName]) => {
+              const section = document.createElement("div");
+              section.className = "option-section";
+
+              const title = document.createElement("div");
+              title.className = "option-title";
+              title.textContent = variantName;
+              section.appendChild(title);
+
+              const chips = document.createElement("div");
+              chips.className = "filter-chips";
+
+              Object.entries(variantValues).forEach(([valueId, valueLabel]) => {
+                // Pastikan ID varian ini dipakai produk ini
+                if (variantsString?.includes(`${variantId}:${valueId}`)) {
+                  const chip = document.createElement("div");
+                  chip.className = "filter-chip";
+                  chip.textContent = valueLabel;
+                  chip.dataset.variantId = variantId;
+                  chip.dataset.valueId = valueId;
+
+                  chip.addEventListener("click", () => {
+                    chips.querySelectorAll(".filter-chip").forEach(c => c.classList.remove("active"));
+                    chip.classList.add("active");
+
+                    selectedVariants[variantId] = valueId;
+
+                    // Semua varian sudah dipilih → update UI
+                    if (Object.keys(selectedVariants).length === Object.keys(variantNames).length) {
+                      const key = Object.values(selectedVariants).join("_"); // contoh: "5" atau "37_38"
+                      const variantData = variantList[key];
+                      if (variantData) {
+                        document.getElementById("detailPrice").textContent = `RM ${variantData.price}`;
+                        document.querySelector("#detailName span").textContent = variantData.title || prod.title;
+                      }
+                    }
+                  });
+
+                  chips.appendChild(chip);
+                }
+              });
+
+              section.appendChild(chips);
+              variantContainer.appendChild(section);
+            });
+          } else {
+            variantContainer.innerHTML = "<p class='label'>No variants available</p>";
+          }
+
+          showPage("page-detail");
+        } else {
+          alert("❌ Gagal ambil detail produk");
+        }
+      } catch (err) {
+        console.error(err);
+        alert("🚨 Gagal memuat detail produk");
       }
     }
   </script>
