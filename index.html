@@ -840,6 +840,8 @@
             <div class="filter-chips" id="variantGroup"></div>
           </div>
 
+          <div id="stockInfo" class="label" style="margin: 6px 0 12px; font-weight: bold;"></div>
+
           <div style="
                   display: flex;
                   justify-content: space-between;
@@ -1232,14 +1234,6 @@
       }
     });
 
-    $("#plusBtn").addEventListener("click", () => {
-      qty++;
-      updateQty();
-    });
-    $("#minusBtn").addEventListener("click", () => {
-      qty = Math.max(1, qty - 1);
-      updateQty();
-    });
     $("#addToCartBtn").addEventListener("click", () => {
       if (currentDetail) {
         const variantChip = document.querySelector(
@@ -1764,6 +1758,11 @@
           $("#detailPrice").textContent = `RM ${prod.product_prices}`;
           $("#detailDesc").textContent = prod['description_' + _lang] || "-";
 
+          // ❗️Matikan qty dan addToCart dulu sebelum varian dipilih
+          $("#plusBtn").disabled = true;
+          $("#minusBtn").disabled = true;
+          $("#addToCartBtn").disabled = true;
+
           const hero = document.querySelector(".hero");
           hero.style.backgroundImage = `url(${prod.product_images?.[0]?.image_name_url || ''})`;
           hero.style.backgroundSize = "cover";
@@ -1815,6 +1814,28 @@
                       if (variantData) {
                         document.getElementById("detailPrice").textContent = `RM ${variantData.price}`;
                         document.querySelector("#detailName span").textContent = variantData.title || prod.title;
+
+                        const stock = data.inventory?.[variantData.id] || "0";
+                        window.maxStock = parseInt(stock);
+                        const stockInfoEl = document.getElementById("stockInfo");
+                        stockInfoEl.textContent = `Stock available: ${stock}`;
+                        stockInfoEl.style.color = parseInt(stock) > 0 ? "green" : "red";
+
+                        // ✅ Aktifkan tombol +, - , dan Add to Cart jika stok > 0
+                        const hasStock = parseInt(stock) > 0;
+                        $("#plusBtn").disabled = !hasStock;
+                        $("#minusBtn").disabled = !hasStock;
+                        $("#addToCartBtn").disabled = !hasStock;
+
+                        // ✅ opsional: ubah tombol jika stok habis
+                        const addToCartBtn = document.getElementById("addToCartBtn");
+                        if (parseInt(stock) > 0) {
+                          addToCartBtn.disabled = false;
+                          addToCartBtn.textContent = "Add to Cart";
+                        } else {
+                          addToCartBtn.disabled = true;
+                          addToCartBtn.textContent = "Out of Stock";
+                        }
                       }
                     }
                   });
@@ -1839,6 +1860,33 @@
         alert("🚨 Gagal memuat detail produk");
       }
     }
+
+    function updateQtyButtons() {
+      const qty = parseInt(document.getElementById("qtyNum").textContent);
+      const plusBtn = document.getElementById("plusBtn");
+      const minusBtn = document.getElementById("minusBtn");
+      const maxStock = window.maxStock ?? Infinity;
+
+      plusBtn.disabled = qty >= maxStock;
+      minusBtn.disabled = qty <= 1;
+    }
+
+    document.getElementById("plusBtn").addEventListener("click", () => {
+      const maxStock = window.maxStock ?? Infinity;
+      if (qty < maxStock) {
+        qty++;
+        updateQty();
+      }
+      updateQtyButtons();
+    });
+
+    document.getElementById("minusBtn").addEventListener("click", () => {
+      if (qty > 1) {
+        qty--;
+        updateQty();
+      }
+      updateQtyButtons();
+    });
   </script>
 </body>
 
