@@ -909,7 +909,7 @@
             </div>
             <div class="summary-row">
               <span>Discount</span>
-              <span id="chkDiscount">$10</span>
+              <span id="chkDiscount">$0</span>
             </div>
             <div class="summary-row">
               <span>Delivery Charge</span>
@@ -1008,7 +1008,7 @@
             </div>
             <div class="summary-row">
               <span>Discount</span>
-              <span id="sxDiscount">$10</span>
+              <span id="sxDiscount">$0</span>
             </div>
             <div class="summary-row">
               <span>Delivery Charge</span>
@@ -1140,15 +1140,20 @@
       const key = `${p.id}-${p.variant || ""}-${p.spicy || ""}`;
       const row = cart.get(key) || {
         id: p.id,
-        name: p.name,
+        name: p.title || p.name || "Unnamed product",
         price: p.price,
         qty: 0,
         variant: p.variant || null,
         spicy: p.spicy || null,
+        variations: p.variations || []
       };
       row.qty += q;
       if (row.qty <= 0) cart.delete(key);
       else cart.set(key, row);
+
+      // 🆕 simpan ke localStorage setiap kali cart berubah
+      localStorage.setItem("cart", JSON.stringify([...cart.values()]));
+      
       renderCart();
     }
 
@@ -1170,7 +1175,9 @@
         line.innerHTML = `
           <div class="xpic"></div>
           <div>
-            <div class="name">${item.name} + ${item.variant}</div>
+            <div class="name">${item.name} 
+              ${item.variations?.length ? " – " + item.variations.join(", ") : ""}
+            </div>
             <div class="label">$${item.price} • each</div>
           </div>
           <div>
@@ -1192,7 +1199,7 @@
         });
         list.appendChild(line);
       });
-      const discount = Math.min(10, subtotal * 0.15) | 0; // playful
+      const discount = 0;
       const delivery = subtotal > 0 ? 0 : 0;
       const total = subtotal - discount + delivery;
       $("#cartSubtotal").textContent = `$${subtotal}`;
@@ -1235,27 +1242,13 @@
     });
 
     $("#addToCartBtn").addEventListener("click", () => {
-      if (currentDetail) {
-        const variantChip = document.querySelector(
-          "#variantGroup .filter-chip.active"
-        );
-        const spicyChip = document.querySelector(
-          "#spicyGroup .filter-chip.active"
-        );
-
-        const selectedVariant = variantChip?.dataset.value || null;
-        const extraPrice = parseFloat(variantChip?.dataset.extra || 0);
-        const selectedSpicy = spicyChip?.dataset.value || null;
-
-        const itemToAdd = {
-          ...currentDetail,
-          variant: selectedVariant,
-          spicy: selectedSpicy,
-          price: currentDetail.price + extraPrice, // total harga
-        };
-
-        upsertCart(itemToAdd, qty);
+      if (!currentDetail) {
+        alert("⚠️ Pilih varian terlebih dahulu sebelum menambahkan ke keranjang!");
+        return;
       }
+
+      console.log('add to cart', currentDetail, qty);
+      upsertCart(currentDetail, qty);
     });
 
     $("#payBtn").addEventListener("click", () => {
@@ -1602,6 +1595,17 @@
         };
       }
 
+      // ✅ Load cart dari localStorage
+      const savedCart = JSON.parse(localStorage.getItem("cart") || "[]");
+      if (savedCart.length > 0) {
+        savedCart.forEach(item => {
+          const key = `${item.id}-${item.variant || ""}-${item.spicy || ""}`;
+          cart.set(key, item);
+        });
+        renderCart();
+      }
+      updateCartBadge();
+
       get_template_data();
     });
 
@@ -1812,6 +1816,20 @@
                       const key = Object.values(selectedVariants).join("_"); // contoh: "5" atau "37_38"
                       const variantData = variantList[key];
                       if (variantData) {
+                        // 🟢 Simpan data lengkap ke currentDetail
+                        currentDetail = {
+                          id: variantData.id, // ini variant ID!
+                          pid: prod.id, // ini ID produk utama
+                          title: variantData.title || prod['title_' + _lang],
+                          image: prod.product_images?.[0]?.image_name_url || "",
+                          price: parseFloat(variantData.price) || 0,
+                          oldPrice: parseFloat(prod.old_price || 0),
+                          discount: parseFloat(prod.discount || 0),
+                          rating: 0,
+                          variations: Object.values(selectedVariants).map(vId => variantValues[vId]).filter(Boolean),
+                          variantId: variantData.id
+                        };
+                        
                         document.getElementById("detailPrice").textContent = `RM ${variantData.price}`;
                         document.querySelector("#detailName span").textContent = variantData.title || prod.title;
 
