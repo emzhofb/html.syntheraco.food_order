@@ -963,22 +963,18 @@
           <div class="label" style="margin: 6px 0; font-weight: bold;">Select Payment</div>
           <div class="payment-options">
             <div class="payment-card active">
-              <img src="icons/wallet.svg" alt="Dieting Pay">
-              <span>Dieting Pay</span>
+              <img src="icons/bank.svg" alt="Dieting Pay">
+              <span>FPX (Offline Payment)</span>
             </div>
             <div class="payment-card">
-              <img src="icons/visa.svg" alt="Visa">
-              <span>Visa</span>
-            </div>
-            <div class="payment-card">
-              <img src="icons/mastercard.svg" alt="Mastercard">
-              <span>Mastercard</span>
-            </div>
-            <div class="payment-card">
-              <img src="icons/bank.svg" alt="Bank">
-              <span>Bank</span>
+              <img src="icons/wallet.svg" alt="Bank">
+              <span>MOBY (Online Payment)</span>
             </div>
           </div>
+
+          <div id="offlinePaymentInfo" 
+            style="margin-top:12px; display:none; font-size:14px; line-height:1.5;">
+        </div>
 
           <!-- Tombol Payment -->
           <div class="bottom-bar">
@@ -1098,10 +1094,27 @@
       historyStack.push(id);
     }
 
+    // 🏦 FPX vs MOBY payment toggle
+    const offlineInfoEl = document.getElementById("offlinePaymentInfo");
+    let offlineNote = null; // nanti diisi dari response checkout
+
     document.querySelectorAll(".payment-card").forEach(card => {
       card.addEventListener("click", () => {
         document.querySelectorAll(".payment-card").forEach(c => c.classList.remove("active"));
         card.classList.add("active");
+
+        const method = card.querySelector("span").textContent;
+        if (method.includes("FPX")) {
+          if (offlineNote?.status === 1 && offlineNote.data.length > 0) {
+            offlineInfoEl.innerHTML = offlineNote.data[0].desc;
+            offlineInfoEl.style.display = "block";
+          } else {
+            offlineInfoEl.innerHTML = "<em>No offline payment info available.</em>";
+            offlineInfoEl.style.display = "block";
+          }
+        } else {
+          offlineInfoEl.style.display = "none";
+        }
       });
     });
 
@@ -2053,6 +2066,14 @@
           });
         }
 
+        // 🏦 Simpan offline payment note dari API
+        offlineNote = data.data.offline_payment_note || null;
+        const fpxCard = document.querySelector(".payment-card:nth-child(1)");
+        if (fpxCard && fpxCard.classList.contains("active") && offlineNote?.status === 1) {
+          offlineInfoEl.innerHTML = offlineNote.data[0].desc;
+          offlineInfoEl.style.display = "block";
+        }
+
         productListEl.appendChild(row);
       });
     }
@@ -2071,6 +2092,18 @@
       // update badge cart
       updateCartBadge();
     }
+
+    document.getElementById("payBtn").addEventListener("click", () => {
+      const selectedCard = document.querySelector(".payment-card.active span").textContent;
+      if (selectedCard.includes("FPX")) {
+        alert("🏦 Silakan transfer ke rekening yang tertera pada offline payment info.");
+        // kamu bisa arahkan ke halaman konfirmasi manual di sini
+      } else if (selectedCard.includes("MOBY")) {
+        // online payment flow
+        alert("💳 Redirecting to online payment gateway...");
+        // window.location.href = "/payment-gateway";
+      }
+    });
   </script>
 </body>
 
