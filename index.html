@@ -891,7 +891,7 @@
         </div>
         <div class="bottom-bar">
           <div style="display: flex; gap: 10px; align-items: center">
-            <button class="btn full" data-go="page-checkout">
+            <button class="btn full" id="checkoutBtn">
               Checkout <span id="cartItemsCount">(0 Items)</span>
             </button>
           </div>
@@ -1251,8 +1251,8 @@
       upsertCart(currentDetail, qty);
     });
 
-    $("#payBtn").addEventListener("click", () => {
-      showPage("page-success");
+    $("#checkoutBtn").addEventListener("click", () => {
+      checkout();
     });
 
     // init
@@ -1905,6 +1905,76 @@
       }
       updateQtyButtons();
     });
+
+    async function checkout() {
+      const username = localStorage.getItem("username");
+      const sessionMemberLoginKey = localStorage.getItem("session_member_login_key");
+      const cookieSessionId = localStorage.getItem("cookie_session_id");
+
+      if (!username || !sessionMemberLoginKey || !cookieSessionId) {
+        alert("⚠️ Please login before checkout!");
+        return;
+      }
+
+      const cartItems = [...cart.values()];
+      if (cartItems.length === 0) {
+        alert("🛒 Your cart is empty!");
+        return;
+      }
+
+      // 🔁 daftar product ID yang dibeli
+      const purchasedPids = cartItems.map(item => item.id);
+
+      // 🔁 format newMyCart sesuai indeks
+      const newMyCart = {};
+      cartItems.forEach((item, i) => {
+        newMyCart[i.toString()] = {
+          id: item.id.toString(),
+          quantity: item.qty.toString()
+        };
+      });
+
+      try {
+        const queryParams = new URLSearchParams({
+          lang: _lang,
+          ao: "1",
+          session_mid: username,
+          session_member_login_key: sessionMemberLoginKey,
+          cookie_session_id: cookieSessionId
+        });
+
+        const res = await fetch(`${ROOT_URL}/api/?${queryParams.toString()}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+            "x-requested-with": "XMLHttpRequest"
+          },
+          body: new URLSearchParams({
+            ao: "1",
+            op: "get_checkout_cart_info",
+            api_key: API_KEY,
+            purchased_pids: JSON.stringify(purchasedPids),
+            newmycart: JSON.stringify(newMyCart)
+          })
+        });
+
+        const data = await res.json();
+        if (data.status === 1) {
+          console.log("✅ Checkout success:", data);
+          showPage("page-checkout");
+
+          // 🧹 bersihkan cart setelah checkout
+          // cart.clear();
+          // localStorage.removeItem("cart");
+          renderCart();
+        } else {
+          alert("❌ Checkout failed: " + (data.msg || "Unknown error"));
+        }
+      } catch (err) {
+        console.error(err);
+        alert("🚨 Checkout request failed!");
+      }
+    }
   </script>
 </body>
 
