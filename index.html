@@ -901,6 +901,11 @@
       <!-- Checkout -->
       <section id="page-checkout" class="page">
         <div class="section">
+          <!-- Daftar Produk di Checkout -->
+          <div class="card" style="margin-bottom: 12px; padding: 16px; border-radius: 12px">
+            <div style="font-weight:bold;margin-bottom:8px;">🛍️ Order Summary</div>
+            <div id="checkoutProductList" class="list"></div>
+          </div>
           <!-- Summary Harga -->
           <div class="card" style="margin-bottom: 12px; padding: 16px; border-radius: 12px">
             <div class="summary-row subtotal">
@@ -936,7 +941,7 @@
                     font-weight: bold;
                   ">
               <span>Delivery Option</span>
-              <span style="font-size: 14px; color: #999">In 45 min</span>
+              <span style="font-size: 14px; color: #999"></span>
             </div>
 
             <!-- Baris 2 -->
@@ -945,23 +950,13 @@
                     justify-content: space-between;
                     align-items: flex-start;
                   ">
-              <div style="font-size: 14px">
+              <div id="checkoutAddress" style="font-size: 14px">
                 Blok 4, House No.47<br />
                 Asamble Village,<br />
                 Perempatan Sipucung
               </div>
-              <a href="#" style="color: var(--primary); font-size: 14px">Change</a>
+              <a href="#" style="color: var(--primary); font-size: 14px"></a>
             </div>
-
-            <!-- Input -->
-            <input type="text" placeholder="More information....." style="
-                    width: 100%;
-                    margin-top: 8px;
-                    padding: 8px;
-                    border-radius: 8px;
-                    border: 1px solid var(--border);
-                    font-size: 14px;
-                  " />
           </div>
 
           <!-- Select Payment -->
@@ -1961,11 +1956,16 @@
         const data = await res.json();
         if (data.status === 1) {
           console.log("✅ Checkout success:", data);
+          
+          // 🧾 render data checkout ke UI
+          renderCheckoutPage(data);
+          
           showPage("page-checkout");
 
           // 🧹 bersihkan cart setelah checkout
           // cart.clear();
           // localStorage.removeItem("cart");
+
           renderCart();
         } else {
           alert("❌ Checkout failed: " + (data.msg || "Unknown error"));
@@ -1974,6 +1974,65 @@
         console.error(err);
         alert("🚨 Checkout request failed!");
       }
+    }
+
+    function renderCheckoutPage(data) {
+      const subtotal = parseFloat(data.data.products_subtotal || 0);
+      const shipping = parseFloat(data.data.shipping_fee || 0);
+      const taxPercent = parseFloat(data.data.tax_percent || 0);
+      const tax = subtotal * taxPercent;
+      const total = subtotal + shipping + tax;
+
+      // 💰 Update ringkasan harga
+      document.getElementById("chkSubtotal").textContent = `RM ${subtotal.toFixed(2)}`;
+      document.getElementById("chkDelivery").textContent = shipping > 0 ? `RM ${shipping}` : "Free";
+      document.getElementById("chkTax").textContent = `RM ${tax.toFixed(2)}`;
+      document.getElementById("chkTotal").textContent = `RM ${total.toFixed(2)}`;
+
+      // 🏠 Update alamat pengiriman
+      const shippingInfo = data.data.shipping_info;
+      const addressEl = document.getElementById("checkoutAddress");
+      addressEl.innerHTML = `
+        ${shippingInfo.address1}<br>
+        ${shippingInfo.city}, ${data.data.shipping_info_states[shippingInfo.state].state}<br>
+        ${data.data.countries[shippingInfo.country].country}
+      `;
+      
+      // 🛍️ Render daftar produk di checkout
+      const productListEl = document.getElementById("checkoutProductList");
+      productListEl.innerHTML = "";
+      const products = data.data.products;
+      const disallowed = data.data.disallow_purchase_items || [];
+
+      Object.values(products).forEach(prod => {
+        const disabled = disallowed.includes(prod.id);
+        const row = document.createElement("div");
+        row.className = "row";
+        row.style.opacity = disabled ? "0.5" : "1";
+        row.innerHTML = `
+          <div class="pic"></div>
+          <div class="meta">
+            <div class="name">${prod.title}</div>
+            <div class="label">RM ${prod.price}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            ${disabled ? `<div class="chip" style="background:#ff5a5f;">Not Available</div>` 
+                      : `<div class="chip">Available</div>`}
+            ${disabled ? `<button class="remove-btn" style="border:0;background:none;color:#ff5a5f;font-size:18px;cursor:pointer;">✖</button>` : ""}
+          </div>
+        `;
+
+        // 🧹 Tambahkan event untuk hapus jika disable
+        if (disabled) {
+          row.querySelector(".remove-btn").addEventListener("click", () => {
+            removeFromCart(prod.id);
+            row.remove(); // hapus elemen dari tampilan
+            renderCart(); // update subtotal, total, dll
+          });
+        }
+
+        productListEl.appendChild(row);
+      });
     }
   </script>
 </body>
