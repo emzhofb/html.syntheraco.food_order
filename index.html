@@ -1998,41 +1998,78 @@
         ${data.data.countries[shippingInfo.country].country}
       `;
       
-      // 🛍️ Render daftar produk di checkout
+      // 🛍️ Render daftar produk
       const productListEl = document.getElementById("checkoutProductList");
       productListEl.innerHTML = "";
-      const products = data.data.products;
-      const disallowed = data.data.disallow_purchase_items || [];
 
-      Object.values(products).forEach(prod => {
-        const disabled = disallowed.includes(prod.id);
+      const products = data.data.products || {};
+      const disallowedObj = data.data.disallow_purchase_items || {};
+
+      // 👉 ambil semua ID disallowed
+      const disallowedPids = Object.keys(disallowedObj);
+
+      // Gabungkan produk normal + produk gagal
+      const mergedProducts = { ...products };
+
+      // tambahkan produk gagal ke mergedProducts (kalau belum ada)
+      disallowedPids.forEach(pid => {
+        if (!mergedProducts[pid]) {
+          mergedProducts[pid] = {
+            id: pid,
+            title: `Product #${pid}`,
+            price: "0.00",
+            is_disallowed_only: true
+          };
+        }
+      });
+
+      Object.values(mergedProducts).forEach(prod => {
+        const isDisallowed = disallowedPids.includes(prod.id);
+        const errorMsg = isDisallowed ? disallowedObj[prod.id]?.error_msg : "";
+
         const row = document.createElement("div");
         row.className = "row";
-        row.style.opacity = disabled ? "0.5" : "1";
+        row.style.opacity = isDisallowed ? "0.5" : "1";
+        row.style.marginBottom = "8px";
         row.innerHTML = `
           <div class="pic"></div>
           <div class="meta">
             <div class="name">${prod.title}</div>
             <div class="label">RM ${prod.price}</div>
+            ${isDisallowed ? `<div style="color:#ff5a5f;font-size:13px;margin-top:4px;">${errorMsg}</div>` : ""}
           </div>
           <div style="display:flex;align-items:center;gap:6px;">
-            ${disabled ? `<div class="chip" style="background:#ff5a5f;">Not Available</div>` 
-                      : `<div class="chip">Available</div>`}
-            ${disabled ? `<button class="remove-btn" style="border:0;background:none;color:#ff5a5f;font-size:18px;cursor:pointer;">✖</button>` : ""}
+            ${isDisallowed ? `<div class="chip" style="background:#ff5a5f;">Not Available</div>` 
+                          : `<div class="chip">Available</div>`}
+            ${isDisallowed ? `<button class="remove-btn" style="border:0;background:none;color:#ff5a5f;font-size:18px;cursor:pointer;">✖</button>` : ""}
           </div>
         `;
 
-        // 🧹 Tambahkan event untuk hapus jika disable
-        if (disabled) {
+        if (isDisallowed) {
           row.querySelector(".remove-btn").addEventListener("click", () => {
             removeFromCart(prod.id);
-            row.remove(); // hapus elemen dari tampilan
-            renderCart(); // update subtotal, total, dll
+            row.remove();
+            renderCart(); // update total
           });
         }
 
         productListEl.appendChild(row);
       });
+    }
+
+    function removeFromCart(productId) {
+      // cari key yang cocok dengan productId di Map cart
+      for (const [key, item] of cart.entries()) {
+        if (item.id === productId) {
+          cart.delete(key);
+        }
+      }
+
+      // update localStorage
+      localStorage.setItem("cart", JSON.stringify([...cart.values()]));
+
+      // update badge cart
+      updateCartBadge();
     }
   </script>
 </body>
