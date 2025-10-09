@@ -2093,15 +2093,100 @@
       updateCartBadge();
     }
 
-    document.getElementById("payBtn").addEventListener("click", () => {
+    document.getElementById("payBtn").addEventListener("click", async () => {
       const selectedCard = document.querySelector(".payment-card.active span").textContent;
+
+      const username = localStorage.getItem("username");
+      const sessionKey = localStorage.getItem("session_member_login_key");
+      const cookieSession = localStorage.getItem("cookie_session_id");
+      const cartItems = JSON.parse(localStorage.getItem("cart") || "[]");
+
+      const purchasedPids = cartItems.map(item => item.id);
+      const newMyCart = {};
+      cartItems.forEach((item, i) => {
+        newMyCart[i] = {
+          id: item.id,
+          quantity: item.quantity
+        };
+      });
+
+      // 🔹 OFFLINE PAYMENT
       if (selectedCard.includes("FPX")) {
-        alert("🏦 Silakan transfer ke rekening yang tertera pada offline payment info.");
-        // kamu bisa arahkan ke halaman konfirmasi manual di sini
-      } else if (selectedCard.includes("MOBY")) {
-        // online payment flow
-        alert("💳 Redirecting to online payment gateway...");
-        // window.location.href = "/payment-gateway";
+        try {
+          const formData = new URLSearchParams();
+          formData.append("ao", "1");
+          formData.append("op", "checkout");
+          formData.append("api_key", API_KEY);
+          formData.append("session_mid", username);
+          formData.append("session_member_login_key", sessionKey);
+          formData.append("cookie_session_id", cookieSession);
+          formData.append("purchased_pids", JSON.stringify(purchasedPids));
+          formData.append("newmycart", JSON.stringify(newMyCart));
+
+          const res = await fetch(`${ROOT_URL}/api/`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+              "X-Requested-With": "XMLHttpRequest",
+            },
+            body: formData
+          });
+
+          const data = await res.json();
+          if (data.status === 1) {
+            // 🟢 redirect ke success page
+            showPage("page-success");
+            localStorage.removeItem("cart");
+            cart.clear();
+            renderCart();
+          } else {
+            alert("❌ Gagal melakukan checkout offline: " + (data.msg || "Unknown error"));
+          }
+        } catch (err) {
+          console.error(err);
+          alert("🚨 Gagal request offline payment");
+        }
+      }
+
+      // 🔸 ONLINE PAYMENT
+      else if (selectedCard.includes("MOBY")) {
+        try {
+          const formData = new URLSearchParams();
+          formData.append("ao", "1");
+          formData.append("op", "get_mobi_payment_link");
+          formData.append("api_key", API_KEY);
+          formData.append("session_mid", username);
+          formData.append("session_member_login_key", sessionKey);
+          formData.append("cookie_session_id", cookieSession);
+          formData.append("purchased_pids", JSON.stringify(purchasedPids));
+          formData.append("newmycart", JSON.stringify(newMyCart));
+
+          const res = await fetch(`${ROOT_URL}/api/`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+              "X-Requested-With": "XMLHttpRequest",
+            },
+            body: formData
+          });
+
+          const data = await res.json();
+          if (data.status === 1 && data.url) {
+            // 🪄 buka gateway di tab baru
+            window.open(data.url, '_blank');
+
+            // 🟢 redirect tab sekarang ke success page
+            showPage("page-success");
+            localStorage.removeItem("cart");
+            cart.clear();
+            renderCart();
+          } else {
+            alert("❌ Gagal mendapatkan link pembayaran: " + (data.msg || "Unknown error"));
+          }
+        } catch (err) {
+          console.error(err);
+          alert("🚨 Gagal request online payment");
+        }
       }
     });
   </script>
