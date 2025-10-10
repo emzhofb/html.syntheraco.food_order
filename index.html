@@ -922,7 +922,7 @@
             </div>
             <div class="summary-row">
               <span>Taxes & Charge</span>
-              <span id="chkTax">$2</span>
+              <span id="chkTax">$0</span>
             </div>
             <hr />
             <div class="summary-row total">
@@ -1007,7 +1007,7 @@
             </div>
             <div class="summary-row">
               <span>Taxes & Charge</span>
-              <span id="sxTax">$2</span>
+              <span id="sxTax">$0</span>
             </div>
             <hr />
             <div class="summary-row total">
@@ -1220,13 +1220,13 @@
       $("#chkSubtotal").textContent = `$${subtotal}`;
       $("#chkDiscount").textContent = `$${discount}`;
       $("#chkDelivery").textContent = "Free";
-      $("#chkTax").textContent = "$2";
-      $("#chkTotal").textContent = `$${total + 2}`;
+      $("#chkTax").textContent = "$0";
+      $("#chkTotal").textContent = `$${total}`;
 
       $("#sxSubtotal").textContent = `$${subtotal}`;
       $("#sxDiscount").textContent = `$${discount}`;
-      $("#sxTax").textContent = "$2";
-      $("#sxTotal").textContent = `$${total + 2}`;
+      $("#sxTax").textContent = "$0";
+      $("#sxTotal").textContent = `$${total}`;
 
       updateCartBadge();
     }
@@ -1975,10 +1975,6 @@
           
           showPage("page-checkout");
 
-          // 🧹 bersihkan cart setelah checkout
-          // cart.clear();
-          // localStorage.removeItem("cart");
-
           renderCart();
         } else {
           alert("❌ Checkout failed: " + (data.msg || "Unknown error"));
@@ -2110,8 +2106,8 @@
         };
       });
 
-      // 🔹 OFFLINE PAYMENT
       if (selectedCard.includes("FPX")) {
+        // 🔹 OFFLINE PAYMENT
         try {
           const formData = new URLSearchParams();
           formData.append("ao", "1");
@@ -2123,7 +2119,7 @@
           formData.append("purchased_pids", JSON.stringify(purchasedPids));
           formData.append("newmycart", JSON.stringify(newMyCart));
 
-          const res = await fetch(`${ROOT_URL}/api/`, {
+          const res = await fetch(`${ROOT_URL}/api`, {
             method: "POST",
             headers: {
               "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
@@ -2134,6 +2130,7 @@
 
           const data = await res.json();
           if (data.status === 1) {
+            document.getElementById("sxTotal").textContent = `$${data.amount.toFixed(2)}`;
             // 🟢 redirect ke success page
             showPage("page-success");
             localStorage.removeItem("cart");
@@ -2146,10 +2143,8 @@
           console.error(err);
           alert("🚨 Gagal request offline payment");
         }
-      }
-
-      // 🔸 ONLINE PAYMENT
-      else if (selectedCard.includes("MOBY")) {
+      } else if (selectedCard.includes("MOBY")) {
+        // 🔸 ONLINE PAYMENT
         try {
           const formData = new URLSearchParams();
           formData.append("ao", "1");
@@ -2161,7 +2156,7 @@
           formData.append("purchased_pids", JSON.stringify(purchasedPids));
           formData.append("newmycart", JSON.stringify(newMyCart));
 
-          const res = await fetch(`${ROOT_URL}/api/`, {
+          const res = await fetch(`${ROOT_URL}/api`, {
             method: "POST",
             headers: {
               "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
@@ -2172,6 +2167,8 @@
 
           const data = await res.json();
           if (data.status === 1 && data.url) {
+            document.getElementById("sxTotal").textContent = `$${data.amount.toFixed(2)}`;
+            
             // 🪄 buka gateway di tab baru
             window.open(data.url, '_blank');
 
